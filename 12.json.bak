@@ -1,0 +1,934 @@
+```json
+{
+  "scenes": [
+    {
+      "id": "scene_1",
+      "name": "开学日的走廊",
+      "dialogueText": "（三户市第一中学开学第一天，高二学生聚之源抱着新教材匆匆穿过走廊）\n（转角处突然撞上一个怀抱作业本的身影，纸张散落一地）",
+      "characterName": "旁白",
+      "choices": [
+        {
+          "text": "立刻蹲下帮忙收拾",
+          "nextSceneId": "scene_2",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 5
+          }
+        },
+        {
+          "text": "先道歉再帮忙",
+          "nextSceneId": "scene_3",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_2",
+      "name": "初遇",
+      "dialogueText": "“抱歉老师！我太着急了……咦？”\n（抬起头，看见一位戴着细框眼镜的年轻男性，他正温和地笑着）\n“没关系，开学第一天总是比较忙乱。我是新来的数学老师，叫我绿豆就好。”",
+      "characterName": "聚之源",
+      "choices": [
+        {
+          "text": "“绿豆老师……这名字真特别”",
+          "nextSceneId": "scene_4",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 2
+          }
+        },
+        {
+          "text": "“老师我帮您送到办公室吧”",
+          "nextSceneId": "scene_5",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 5
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_3",
+      "name": "正式道歉",
+      "dialogueText": "“非常对不起！我跑得太急了。”\n“没事，下次注意看路就好。我是数学老师绿豆，你是……？”\n（绿豆老师推了推眼镜，眼神中带着探究）",
+      "characterName": "绿豆",
+      "choices": [
+        {
+          "text": "礼貌地自我介绍",
+          "nextSceneId": "scene_4",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 3
+          }
+        },
+        {
+          "text": "主动帮忙收拾并询问是否需要送到办公室",
+          "nextSceneId": "scene_5",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_4",
+      "name": "特别的称呼",
+      "dialogueText": "“因为我很喜欢绿豆汤，学生们就这么叫开了。”\n（绿豆老师轻笑）\n“你是哪个班的？也许我会教你数学。”",
+      "characterName": "绿豆",
+      "choices": [
+        {
+          "text": "告诉班级并表达对数学的兴趣",
+          "nextSceneId": "scene_6",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 5
+          }
+        },
+        {
+          "text": "简单回答班级并准备离开",
+          "nextSceneId": "scene_7",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_5",
+      "name": "教师办公室",
+      "dialogueText": "（来到数学组办公室，绿豆老师将作业本放在桌上）\n“谢谢你，聚之源同学。作为感谢……这个给你。”\n（他从抽屉里拿出一颗薄荷糖）\n“开学第一天，保持清醒很重要。”",
+      "characterName": "绿豆",
+      "choices": [
+        {
+          "text": "开心地接受并当场拆开糖纸",
+          "nextSceneId": "scene_8",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 5
+          }
+        },
+        {
+          "text": "礼貌接过并小心收进口袋",
+          "nextSceneId": "scene_9",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_6",
+      "name": "数学话题",
+      "dialogueText": "“高二（3）班？那正好是我教的班级。”\n（绿豆老师眼睛微微一亮）\n“对数学感兴趣的话，课后可以来问我问题。我通常会在图书馆角落备课。”",
+      "characterName": "绿豆",
+      "choices": [
+        {
+          "text": "立即约定今天放学后就去",
+          "nextSceneId": "scene_10",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 7
+          }
+        },
+        {
+          "text": "表示会考虑，先赶去教室",
+          "nextSceneId": "scene_7",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_7",
+      "name": "教室里的议论",
+      "dialogueText": "（刚进教室，同桌Lily就凑过来）\n“之源，你认识新来的数学老师？他好帅啊！而且听说才25岁！”\n（周围几个女生也投来好奇的目光）",
+      "characterName": "Lily",
+      "choices": [
+        {
+          "text": "简单描述刚才的相遇",
+          "nextSceneId": "scene_11",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "Lily好感",
+            "operator": "ADD",
+            "value": 3
+          }
+        },
+        {
+          "text": "含糊带过，开始整理课本",
+          "nextSceneId": "scene_12",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "Lily好感",
+            "operator": "ADD",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_8",
+      "name": "薄荷糖的味道",
+      "dialogueText": "“唔……好凉。”\n（绿豆老师看着你的表情笑了）\n“这是我最喜欢的牌子。对了，放学后如果没事，可以来图书馆找我，我帮你预习这学期的难点。”",
+      "characterName": "聚之源",
+      "choices": [
+        {
+          "text": "眼睛发亮地答应",
+          "nextSceneId": "scene_10",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 8
+          }
+        },
+        {
+          "text": "犹豫地说要看社团活动",
+          "nextSceneId": "scene_13",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_9",
+      "name": "含蓄的告别",
+      "dialogueText": "“那我先去教室了，老师再见。”\n“等等，聚之源同学。”\n（绿豆老师叫住你）\n“这是我的联系方式，学习上有什么问题随时可以问我。”\n（他递来一张简洁的名片）",
+      "characterName": "绿豆",
+      "choices": [
+        {
+          "text": "郑重地双手接过",
+          "nextSceneId": "scene_14",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 6
+          }
+        },
+        {
+          "text": "略显慌乱地收下",
+          "nextSceneId": "scene_15",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_10",
+      "name": "图书馆的约定",
+      "dialogueText": "“太好了。那么放学后，图书馆东南角靠窗的位置。”\n（绿豆老师的声音很温和）\n“我会带些参考资料，还有……更多的薄荷糖。”",
+      "characterName": "绿豆",
+      "choices": [
+        {
+          "text": "笑着点头，心跳有点快",
+          "nextSceneId": "scene_16",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 5
+          }
+        },
+        {
+          "text": "保持礼貌地道谢离开",
+          "nextSceneId": "scene_17",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_11",
+      "name": "女生们的兴趣",
+      "dialogueText": "“你们刚才靠得很近？之源，你脸红了哦！”\n（Lily促狭地笑着）\n“该不会……你对绿豆老师有特别的好感吧？”",
+      "characterName": "Lily",
+      "choices": [
+        {
+          "text": "立刻否认，转移话题",
+          "nextSceneId": "scene_18",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "Lily好感",
+            "operator": "ADD",
+            "value": 2
+          }
+        },
+        {
+          "text": "沉默不语，默认似的",
+          "nextSceneId": "scene_19",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "Lily好感",
+            "operator": "ADD",
+            "value": 5
+          }
+        },
+        {
+          "text": "认真地说“老师只是很温柔”",
+          "nextSceneId": "scene_20",
+          "condition": {
+            "variableKey": "绿豆好感",
+            "operator": "GREATER_EQUAL",
+            "value": 15
+          },
+          "effect": {
+            "variableKey": "Lily好感",
+            "operator": "ADD",
+            "value": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_12",
+      "name": "第一堂数学课",
+      "dialogueText": "（上课铃响，绿豆老师走进教室）\n“大家好，我是你们的数学老师，可以叫我绿豆。”\n（他的目光在全班扫过，经过你时微微停顿）\n“现在开始上课。”",
+      "characterName": "旁白",
+      "choices": [
+        {
+          "text": "专注地听讲",
+          "nextSceneId": "scene_21",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 3
+          }
+        },
+        {
+          "text": "偶尔走神，偷偷观察老师",
+          "nextSceneId": "scene_22",
+          "condition": {
+            "variableKey": "绿豆好感",
+            "operator": "GREATER_EQUAL",
+            "value": 10
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_13",
+      "name": "社团的抉择",
+      "dialogueText": "“这样啊……那改天吧。”\n（绿豆老师眼中闪过一丝失望，但很快恢复笑容）\n“对了，我是数学社团的顾问，如果你有兴趣的话……”",
+      "characterName": "绿豆",
+      "choices": [
+        {
+          "text": "立即表示会参加数学社",
+          "nextSceneId": "scene_23",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 7
+          }
+        },
+        {
+          "text": "说需要考虑现有社团",
+          "nextSceneId": "scene_24",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_14",
+      "name": "名片的温度",
+      "dialogueText": "（名片还带着老师的体温）\n“私下也可以叫我绿豆，不用那么拘谨。”\n（他压低声音）\n“这是只给特别学生的号码。”",
+      "characterName": "绿豆",
+      "choices": [
+        {
+          "text": "耳朵发烫，轻声说“好的，绿豆”",
+          "nextSceneId": "scene_25",
+          "condition": {
+            "variableKey": "绿豆好感",
+            "operator": "GREATER_EQUAL",
+            "value": 15
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 8
+          }
+        },
+        {
+          "text": "保持礼貌“谢谢老师”",
+          "nextSceneId": "scene_17",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_15",
+      "name": "心跳加速",
+      "dialogueText": "（手碰到老师的手指，像触电般缩回）\n“对、对不起！”\n“没关系。”绿豆老师笑了笑，“你很紧张？”",
+      "characterName": "聚之源",
+      "choices": [
+        {
+          "text": "老实承认“因为老师很温柔”",
+          "nextSceneId": "scene_25",
+          "condition": {
+            "variableKey": "绿豆好感",
+            "operator": "GREATER_EQUAL",
+            "value": 12
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 7
+          }
+        },
+        {
+          "text": "否认并快速离开",
+          "nextSceneId": "scene_17",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_16",
+      "name": "走廊的期待",
+      "dialogueText": "（离开办公室，你感到脸颊发烫）\n（Lily突然从旁边冒出来）\n“之源，你刚从数学组出来？脸这么红，有问题哦～”",
+      "characterName": "Lily",
+      "choices": [
+        {
+          "text": "承认要去图书馆补习",
+          "nextSceneId": "scene_26",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "Lily好感",
+            "operator": "ADD",
+            "value": 4
+          }
+        },
+        {
+          "text": "说是老师交代事情",
+          "nextSceneId": "scene_27",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "Lily好感",
+            "operator": "ADD",
+            "value": 2
+          }
+        },
+        {
+          "text": "反问“你怎么在这”来转移话题",
+          "nextSceneId": "scene_28",
+          "condition": {
+            "variableKey": "Lily好感",
+            "operator": "GREATER_EQUAL",
+            "value": 8
+          },
+          "effect": {
+            "variableKey": "Lily好感",
+            "operator": "ADD",
+            "value": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_17",
+      "name": "回到教室",
+      "dialogueText": "（教室里大家都在讨论新老师）\n“听说绿豆老师是东大毕业的！”\n“而且单身哦～”\n（你不自觉地握紧了口袋里的名片）",
+      "characterName": "旁白",
+      "choices": [
+        {
+          "text": "加入讨论",
+          "nextSceneId": "scene_29",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "同学关系",
+            "operator": "ADD",
+            "value": 3
+          }
+        },
+        {
+          "text": "默默听大家讨论",
+          "nextSceneId": "scene_30",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "同学关系",
+            "operator": "ADD",
+            "value": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_18",
+      "name": "Lily的追问",
+      "dialogueText": "“好吧好吧，不逗你了。不过之源，如果真有什么发展，要第一个告诉我哦！”\n（Lily眨眨眼）\n“作为交换，我告诉你一个秘密——绿豆老师喜欢在图书馆待到很晚。”",
+      "characterName": "Lily",
+      "choices": [
+        {
+          "text": "感谢她的信息",
+          "nextSceneId": "scene_31",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "Lily好感",
+            "operator": "ADD",
+            "value": 5
+          }
+        },
+        {
+          "text": "装作不在意",
+          "nextSceneId": "scene_32",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "Lily好感",
+            "operator": "ADD",
+            "value": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_19",
+      "name": "默认的暧昧",
+      "dialogueText": "“哇！默认了！之源你太可爱了！”\n（Lily压低声音）\n“需要我帮你制造机会吗？比如……数学社的招新？”",
+      "characterName": "Lily",
+      "choices": [
+        {
+          "text": "红着脸点头",
+          "nextSceneId": "scene_33",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "Lily好感",
+            "operator": "ADD",
+            "value": 7
+          }
+        },
+        {
+          "text": "慌张地摇头",
+          "nextSceneId": "scene_34",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "Lily好感",
+            "operator": "ADD",
+            "value": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_20",
+      "name": "认真的辩解",
+      "dialogueText": "“只是很温柔……吗？”Lily意味深长地笑了，“可是之源，你的眼神可不是这么说的。”\n（她拍拍你的肩）\n“放心，我会帮你保密的。不过……要请我喝奶茶哦！”",
+      "characterName": "Lily",
+      "choices": [
+        {
+          "text": "答应请客",
+          "nextSceneId": "scene_35",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "Lily好感",
+            "operator": "ADD",
+            "value": 6
+          }
+        },
+        {
+          "text": "无奈地叹气",
+          "nextSceneId": "scene_36",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "Lily好感",
+            "operator": "ADD",
+            "value": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_21",
+      "name": "专注的奖励",
+      "dialogueText": "“聚之源同学，请回答这道题。”\n（你流畅地回答了问题）\n“很好。”绿豆老师微笑着点头，“看来预习得很充分。”\n（他的笑容让你心跳漏了一拍）",
+      "characterName": "绿豆",
+      "choices": [
+        {
+          "text": "与老师对视微笑",
+          "nextSceneId": "scene_37",
+          "condition": {
+            "variableKey": "绿豆好感",
+            "operator": "GREATER_EQUAL",
+            "value": 12
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 6
+          }
+        },
+        {
+          "text": "害羞地低头",
+          "nextSceneId": "scene_38",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_22",
+      "name": "被发现了",
+      "dialogueText": "“聚之源同学，上课要专心。”\n（绿豆老师走到你桌边，轻轻敲了敲桌面）\n“放学后，图书馆见。我们需要……好好补课。”\n（他的声音里带着一丝笑意）",
+      "characterName": "绿豆",
+      "choices": [
+        {
+          "text": "脸红点头",
+          "nextSceneId": "scene_39",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 5
+          }
+        },
+        {
+          "text": "小声说“对不起老师”",
+          "nextSceneId": "scene_40",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_23",
+      "name": "数学社的邀请",
+      "dialogueText": "“太好了。数学社活动时间是每周二、四放学后，地点在实验楼302。”\n（绿豆老师眼睛发亮）\n“其实……我一直希望能找到对数学真正有兴趣的学生。”",
+      "characterName": "绿豆",
+      "choices": [
+        {
+          "text": "“我会成为那样的学生”",
+          "nextSceneId": "scene_41",
+          "condition": {
+            "variableKey": "绿豆好感",
+            "operator": "GREATER_EQUAL",
+            "value": 18
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 10
+          }
+        },
+        {
+          "text": "“我会努力试试看”",
+          "nextSceneId": "scene_42",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 6
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_24",
+      "name": "犹豫的回应",
+      "dialogueText": "“我明白了，不用勉强。”\n（绿豆老师眼中闪过一丝失落，但很快掩饰）\n“不过，随时欢迎你来数学社参观。”",
+      "characterName": "绿豆",
+      "choices": [
+        {
+          "text": "改变主意“我还是参加吧”",
+          "nextSceneId": "scene_23",
+          "condition": {
+            "variableKey": "绿豆好感",
+            "operator": "GREATER_EQUAL",
+            "value": 15
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 8
+          }
+        },
+        {
+          "text": "坚持原有计划",
+          "nextSceneId": "scene_43",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "SUBTRACT",
+            "value": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "scene_25",
+      "name": "亲密称呼",
+      "dialogueText": "“绿豆……”\n（名字叫出口的瞬间，你看到老师耳尖泛红）\n“嗯。”他轻声回应，“这个称呼……只准在没人的时候叫。”",
+      "characterName": "聚之源",
+      "choices": [
+        {
+          "text": "“那现在可以多叫几次吗？绿豆、绿豆……”",
+          "nextSceneId": "scene_44",
+          "condition": {
+            "variableKey": "绿豆好感",
+            "operator": "GREATER_EQUAL",
+            "value": 25
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 12
+          }
+        },
+        {
+          "text": "害羞地点头",
+          "nextSceneId": "scene_45",
+          "condition": {
+            "variableKey": "none",
+            "operator": "EQUAL",
+            "value": 0
+          },
+          "effect": {
+            "variableKey": "绿豆好感",
+            "operator": "ADD",
+            "value": 7
+          }
+        }
+      ]
+    }
+  ]
+}
+```
