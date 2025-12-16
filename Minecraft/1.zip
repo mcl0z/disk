@@ -1,0 +1,1380 @@
+{
+"scenes": [
+// 承接上一轮未完成的 scene_38 第二个选项
+{
+"id": "scene_38",
+"name": "奖励的悬念",
+"dialogueText": "绿豆神秘地笑了笑“到时候你就知道了，现在保密”",
+"characterName": "绿豆",
+"choices": [
+{
+"text": "“好吧，那我就期待一下”",
+"nextSceneId": "scene_61",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 8
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 1
+}
+},
+{
+"text": "“老师您别吊我胃口啊”，假装撒娇",
+"nextSceneId": "scene_62",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 8
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+}
+]
+},
+{
+"id": "scene_39",
+"name": "自信的约定",
+"dialogueText": "绿豆拍拍你的肩膀“我相信你有这个实力。好好训练，别受伤了”，他的手掌温热，触感清晰而真实",
+"characterName": "绿豆",
+"choices": [
+{
+"text": "“谢谢老师关心，我会注意安全的”",
+"nextSceneId": "scene_61",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 7
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 2
+}
+},
+{
+"text": "“老师，等我们赢了比赛，您能和我们一起合影吗？”",
+"nextSceneId": "scene_63",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 7
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+}
+]
+},
+{
+"id": "scene_40",
+"name": "简单的告别",
+"dialogueText": "你转身离开，刚走几步，就听到绿豆在身后说“记得好好休息，别太累了”",
+"characterName": "绿豆",
+"choices": [
+{
+"text": "回头挥手“知道了老师，您也一样”",
+"nextSceneId": "scene_61",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 6
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 1
+}
+},
+{
+"text": "点头回应，继续往前走",
+"nextSceneId": "scene_64",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 6
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 0
+}
+}
+]
+},
+{
+"id": "scene_41",
+"name": "赛场的陪伴",
+"dialogueText": "绿豆笑着说“当然会啊，我会一直看到比赛结束。而且我还准备了矿泉水，到时候给你补充体力”",
+"characterName": "绿豆",
+"choices": [
+{
+"text": "感动地说“谢谢老师，您想得太周到了”",
+"nextSceneId": "scene_63",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 7
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+},
+{
+"text": "“老师，您不用特意为我准备的”，有些不好意思",
+"nextSceneId": "scene_61",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 7
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 2
+}
+}
+]
+},
+{
+"id": "scene_42",
+"name": "深度的文学交流",
+"dialogueText": "你和绿豆聊得很投机，从人物命运聊到主题思想，他的见解独到而深刻，让你受益匪浅。“没想到你对这本书的理解这么深”，绿豆看着你，眼中满是欣赏",
+"characterName": "绿豆",
+"choices": [
+{
+"text": "“都是老师您引导得好，我还有很多要学习的地方”",
+"nextSceneId": "scene_65",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 11
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+},
+{
+"text": "“老师，您什么时候有空，我们可以再深入讨论一下吗？”",
+"nextSceneId": "scene_66",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 11
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 4
+}
+}
+]
+},
+{
+"id": "scene_43",
+"name": "耐心的讲解",
+"dialogueText": "绿豆耐心地说“没关系，这本书确实有点难懂。下次你们讨论的时候，我可以去旁听，给你们答疑解惑”",
+"characterName": "绿豆",
+"choices": [
+{
+"text": "高兴地说“真的吗？太好了！谢谢老师”",
+"nextSceneId": "scene_65",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 10
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+},
+{
+"text": "“老师，这样会不会耽误您的时间啊？”",
+"nextSceneId": "scene_67",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 10
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 2
+}
+}
+]
+},
+{
+"id": "scene_44",
+"name": "书籍的传递",
+"dialogueText": "绿豆从办公桌抽屉里拿出一本《小王子》递给你“这是我珍藏的版本，你可以先拿去看，看完再传给社团的同学”",
+"characterName": "绿豆",
+"choices": [
+{
+"text": "小心翼翼地接过书“谢谢老师，我一定会好好保管的”",
+"nextSceneId": "scene_65",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 9
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+},
+{
+"text": "“老师，您自己不看吗？”",
+"nextSceneId": "scene_68",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 9
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 2
+}
+}
+]
+},
+{
+"id": "scene_45",
+"name": "推荐的理由",
+"dialogueText": "绿豆温柔地说“因为这本书教会我们要珍惜眼前的人，不要等到失去了才后悔。而且文字简单却充满力量，很适合你们这个年纪的孩子读”",
+"characterName": "绿豆",
+"choices": [
+{
+"text": "“老师，您说得很有道理，我会认真读的”",
+"nextSceneId": "scene_65",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 10
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+},
+{
+"text": "“老师，您是不是也有很珍惜的人啊？”",
+"nextSceneId": "scene_69",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 10
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 4
+}
+}
+]
+},
+{
+"id": "scene_46",
+"name": "办公室的奖励",
+"dialogueText": "绿豆从柜子里拿出一个包装精美的笔记本递给你“这是给你的奖励，希望你继续努力”。笔记本的封面是你喜欢的星空图案，显然是特意挑选的",
+"characterName": "绿豆",
+"choices": [
+{
+"text": "惊喜地说“谢谢老师！我太喜欢了”",
+"nextSceneId": "scene_70",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 6
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+},
+{
+"text": "“老师，您怎么知道我喜欢星空啊？”",
+"nextSceneId": "scene_71",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 6
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 4
+}
+}
+]
+},
+{
+"id": "scene_47",
+"name": "谦逊的感恩",
+"dialogueText": "绿豆摇摇头“这都是你自己努力的结果。其实你很聪明，只是以前没有找到正确的学习方法”。他的目光温柔，仿佛能看透你的心思",
+"characterName": "绿豆",
+"choices": [
+{
+"text": "“如果没有老师您的指导，我也不会进步这么快”",
+"nextSceneId": "scene_70",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 8
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+},
+{
+"text": "“老师，以后我有不懂的问题，还能经常来问您吗？”",
+"nextSceneId": "scene_72",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 8
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 4
+}
+}
+]
+},
+{
+"id": "scene_48",
+"name": "学习的向往",
+"dialogueText": "绿豆笑着说“当然可以啊，我很乐意教你。其实你身上有很多闪光点，只是你自己还没发现”",
+"characterName": "绿豆",
+"choices": [
+{
+"text": "“谢谢老师的鼓励，我会努力发现自己的优点的”",
+"nextSceneId": "scene_70",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 6
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 2
+}
+},
+{
+"text": "“老师，您觉得我最大的优点是什么啊？”",
+"nextSceneId": "scene_73",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 6
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+}
+]
+},
+{
+"id": "scene_49",
+"name": "默认的心动",
+"dialogueText": "Lily看着你嘴角的笑容，调侃道“还说不是呢，你看你笑得多开心。我觉得绿豆老师对你也不只是师生之情哦”",
+"characterName": "Lily",
+"choices": [
+{
+"text": "轻轻捶了Lily一下“别再说了，小心被别人听到”",
+"nextSceneId": "scene_70",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 5
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 2
+}
+},
+{
+"text": "沉默不语，脸颊微微发烫",
+"nextSceneId": "scene_74",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 5
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+}
+]
+},
+{
+"id": "scene_50",
+"name": "糖的甜味",
+"dialogueText": "糖的甜味在口中散开，也驱散了心中的沮丧。你想起绿豆温柔的眼神，心里暖暖的。这时，Lily走过来说“之源，绿豆老师对你真好，居然还给你糖吃”",
+"characterName": "Lily",
+"choices": [
+{
+"text": "笑着说“是啊，老师人真的很好”",
+"nextSceneId": "scene_70",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 4
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 2
+}
+},
+{
+"text": "把剩下的糖递给Lily“给你吃，味道很不错哦”",
+"nextSceneId": "scene_75",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 4
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 1
+}
+}
+]
+},
+{
+"id": "scene_51",
+"name": "习题的探讨",
+"dialogueText": "你找到绿豆，和他讨论练习题。他耐心地为你讲解解题思路，偶尔会靠近你，身上淡淡的墨香萦绕在鼻尖。“这里应该用这个公式，你再想想”，他的声音低沉而温柔",
+"characterName": "绿豆",
+"choices": [
+{
+"text": "认真听讲，时不时点头“原来是这样，我明白了”",
+"nextSceneId": "scene_76",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 10
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 2
+}
+},
+{
+"text": "假装没听懂，让他再讲一遍“老师，我还是不太明白，您能再详细说一下吗？”",
+"nextSceneId": "scene_77",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 10
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+}
+]
+},
+{
+"id": "scene_52",
+"name": "下课的请教",
+"dialogueText": "下课铃响后，你拿着练习题去找绿豆。办公室里还有其他老师，他把你带到走廊上，轻声为你讲解。“这个题的关键在于辅助线，你看这样画...”",
+"characterName": "绿豆",
+"choices": [
+{
+"text": "专注地看着他的手，认真听讲",
+"nextSceneId": "scene_76",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 10
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 2
+}
+},
+{
+"text": "担心影响他休息“老师，您要不要先喝口水再讲？”",
+"nextSceneId": "scene_78",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 10
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+}
+]
+},
+{
+"id": "scene_53",
+"name": "坦然的心动",
+"dialogueText": "第二天早上，你一进教室就看到绿豆在讲台上整理教案。他看到你进来，朝你露出一个温柔的笑容。你也坦然地回以微笑，心中的悸动不再掩饰",
+"characterName": "旁白",
+"choices": [
+{
+"text": "主动走过去打招呼“老师早上好”",
+"nextSceneId": "scene_79",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 12
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 2
+}
+},
+{
+"text": "回到座位上，偷偷看着他的身影",
+"nextSceneId": "scene_80",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 12
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 1
+}
+}
+]
+},
+{
+"id": "scene_54",
+"name": "专业的过往",
+"dialogueText": "绿豆说“我大学学的是数学专业，一直很喜欢数学，也希望能把这份喜欢传递给学生们”",
+"characterName": "绿豆",
+"choices": [
+{
+"text": "“老师，您真厉害，数学那么难，您居然能学得这么好”",
+"nextSceneId": "scene_81",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 12
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 2
+}
+},
+{
+"text": "“老师，您大学的时候有没有什么有趣的事情啊？”",
+"nextSceneId": "scene_82",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 12
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+}
+]
+},
+{
+"id": "scene_55",
+"name": "大学的趣事",
+"dialogueText": "绿豆回忆起大学时光，脸上露出笑容“大学的时候啊，和室友一起熬夜复习，一起参加数学竞赛，现在想想还挺怀念的”",
+"characterName": "绿豆",
+"choices": [
+{
+"text": "“听起来好有意思啊，老师您当时有没有拿过竞赛奖项？”",
+"nextSceneId": "scene_82",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 14
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+},
+{
+"text": "“老师，您大学的时候有没有喜欢过别人啊？”",
+"nextSceneId": "scene_83",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 14
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 4
+}
+}
+]
+},
+{
+"id": "scene_56",
+"name": "目送的温柔",
+"dialogueText": "绿豆转身走进小区，走了几步后也回头看了你一眼，朝你挥了挥手。月光洒在他身上，勾勒出温柔的轮廓",
+"characterName": "旁白",
+"choices": [
+{
+"text": "一直目送他消失在视线里，才转身回家",
+"nextSceneId": "scene_81",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 12
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 2
+}
+},
+{
+"text": "拿出手机，想给他发一条“老师晚安”，又犹豫着删掉",
+"nextSceneId": "scene_84",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 12
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+}
+]
+},
+{
+"id": "scene_57",
+"name": "画画的回忆",
+"dialogueText": "绿豆有些不好意思地说“小时候画得还不错，不过现在都忘得差不多了。如果你不介意，下次可以给我看看你的画吗？”",
+"characterName": "绿豆",
+"choices": [
+{
+"text": "高兴地说“当然可以啊！我明天就带我的画给您看”",
+"nextSceneId": "scene_85",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 14
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+},
+{
+"text": "“我的画可能有点幼稚，老师您别笑话我啊”",
+"nextSceneId": "scene_86",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 14
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 2
+}
+}
+]
+},
+{
+"id": "scene_58",
+"name": "重拾的兴趣",
+"dialogueText": "绿豆眼神闪烁了一下“其实有时候也会想画，只是没有机会。如果你愿意，我们可以一起画画啊”",
+"characterName": "绿豆",
+"choices": [
+{
+"text": "惊喜地说“真的吗？太好了！我们什么时候开始啊？”",
+"nextSceneId": "scene_85",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 15
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 4
+}
+},
+{
+"text": "“老师，您平时那么忙，会不会耽误您的时间？”",
+"nextSceneId": "scene_87",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 15
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+}
+]
+},
+{
+"id": "scene_59",
+"name": "音乐的共鸣",
+"dialogueText": "绿豆笑着说“是啊，这首曲子总能让人静下心来。我这里有一张贝多芬钢琴曲的黑胶唱片，下次可以借给你听”",
+"characterName": "绿豆",
+"choices": [
+{
+"text": "感动地说“谢谢老师！我一定会好好保管的”",
+"nextSceneId": "scene_88",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 16
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+},
+{
+"text": "“老师，我们可以一起听吗？我想和您一起分享这份安静”",
+"nextSceneId": "scene_89",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 16
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 4
+}
+}
+]
+},
+{
+"id": "scene_60",
+"name": "更多的旋律",
+"dialogueText": "绿豆说“我还喜欢莫扎特的《土耳其进行曲》，还有肖邦的《夜曲》。你呢，除了《月光奏鸣曲》，还喜欢什么？”",
+"characterName": "绿豆",
+"choices": [
+{
+"text": "“我喜欢肖邦的《雨滴》，听起来很治愈”",
+"nextSceneId": "scene_88",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 15
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+},
+{
+"text": "“老师，您能给我推荐更多好听的钢琴曲吗？”",
+"nextSceneId": "scene_90",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 15
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 2
+}
+}
+]
+},
+{
+"id": "scene_61",
+"name": "篮球比赛当天",
+"dialogueText": "篮球比赛当天，赛场人声鼎沸。绿豆穿着裁判服，站在赛场中央，专注而认真。你作为主力队员，在赛场上奋力拼搏。中场休息时，他走到你身边，递给你一瓶矿泉水",
+"characterName": "绿豆",
+"choices": [
+{
+"text": "接过水，大口喝了几口“谢谢老师，我一定会加油的”",
+"nextSceneId": "scene_91",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 8
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 2
+}
+},
+{
+"text": "擦了擦汗，看着他说“老师，您觉得我们队有希望赢吗？”",
+"nextSceneId": "scene_92",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 8
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+}
+]
+},
+{
+"id": "scene_62",
+"name": "撒娇的回应",
+"dialogueText": "绿豆被你逗笑了，耳尖微微泛红“好了好了，不吊你胃口了。如果你们队赢了，我请你吃冰淇淋”",
+"characterName": "绿豆",
+"choices": [
+{
+"text": "开心地说“好啊！那我一定要赢下比赛”",
+"nextSceneId": "scene_91",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 11
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+},
+{
+"text": "“老师，我要吃巧克力味的，可以吗？”",
+"nextSceneId": "scene_93",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 11
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 4
+}
+}
+]
+},
+{
+"id": "scene_63",
+"name": "合影的约定",
+"dialogueText": "比赛结束后，你们队赢得了冠军。队员们欢呼雀跃，你跑到绿豆身边，兴奋地说“老师，我们赢了！”。绿豆笑着说“我就知道你可以的”",
+"characterName": "绿豆",
+"choices": [
+{
+"text": "拉着他的手说“老师，我们一起合影吧！”",
+"nextSceneId": "scene_94",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 10
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+},
+{
+"text": "“老师，您答应我的奖励呢？”",
+"nextSceneId": "scene_93",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 10
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 2
+}
+}
+]
+},
+{
+"id": "scene_64",
+"name": "默默的支持",
+"dialogueText": "比赛中，你总能看到绿豆在赛场边为你加油的身影。虽然他没有说话，但眼神中的鼓励却让你充满力量。比赛结束后，他走到你身边，说“打得不错”",
+"characterName": "绿豆",
+"choices": [
+{
+"text": "“谢谢老师，您的支持给了我很大的动力”",
+"nextSceneId": "scene_91",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 6
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 2
+}
+},
+{
+"text": "“老师，您要不要和我们一起庆祝一下？”",
+"nextSceneId": "scene_95",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 6
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+}
+]
+},
+{
+"id": "scene_65",
+"name": "文学社的活动",
+"dialogueText": "文学社活动当天，绿豆如约来到活动室。他和大家一起讨论《小王子》，分享自己的阅读心得，言语风趣而深刻，赢得了大家的阵阵掌声。活动结束后，他叫住了你",
+"characterName": "旁白",
+"choices": [
+{
+"text": "主动走过去“老师，今天谢谢您的分享，我收获很大”",
+"nextSceneId": "scene_96",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 12
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+},
+{
+"text": "等大家都走了，才走到他身边“老师，您今天讲得真好”",
+"nextSceneId": "scene_97",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 12
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 4
+}
+}
+]
+},
+{
+"id": "scene_66",
+"name": "深入的讨论",
+"dialogueText": "绿豆笑着说“好啊，这周末我有空，我们可以去图书馆一起讨论”。周末，你们在图书馆里，沉浸在文学的世界里，不知不觉就到了闭馆时间",
+"characterName": "绿豆",
+"choices": [
+{
+"text": "“时间过得真快啊，老师，今天谢谢你”",
+"nextSceneId": "scene_96",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 15
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+},
+{
+"text": "“老师，我们一起去吃晚饭吧？我请客”",
+"nextSceneId": "scene_98",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 15
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 4
+}
+}
+]
+},
+{
+"id": "scene_67",
+"name": "无私的付出",
+"dialogueText": "绿豆摇摇头“不会啊，能和你们一起讨论书籍，我也很开心。而且看到你们对文学感兴趣，我也觉得很欣慰”",
+"characterName": "绿豆",
+"choices": [
+{
+"text": "“老师，您真是太好了”",
+"nextSceneId": "scene_96",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 12
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 2
+}
+},
+{
+"text": "“老师，以后有机会，我想给您推荐一本我喜欢的书”",
+"nextSceneId": "scene_99",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 12
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+}
+]
+},
+{
+"id": "scene_68",
+"name": "书籍的意义",
+"dialogueText": "绿豆笑着说“我已经看过很多遍了，现在更希望把这本书分享给你们。希望你们能从书中有所收获”",
+"characterName": "绿豆",
+"choices": [
+{
+"text": "“老师，我一定会认真读的，读完后给您写读后感”",
+"nextSceneId": "scene_96",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 11
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 2
+}
+},
+{
+"text": "“老师，您为什么这么喜欢这本书啊？”",
+"nextSceneId": "scene_100",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 11
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+}
+]
+},
+{
+"id": "scene_69",
+"name": "珍惜的人",
+"dialogueText": "绿豆的眼神变得温柔“有啊，我的家人，还有现在的学生们。能和你们相遇，也是一种缘分”，他的目光落在你身上，带着一丝不易察觉的深情",
+"characterName": "绿豆",
+"choices": [
+{
+"text": "“能成为您的学生，我也觉得很幸运”",
+"nextSceneId": "scene_96",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 14
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+},
+{
+"text": "“老师，您以后也会一直留在这所学校吗？”",
+"nextSceneId": "scene_101",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 14
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 4
+}
+}
+]
+},
+{
+"id": "scene_70",
+"name": "笔记本的温暖",
+"dialogueText": "你把笔记本珍藏起来，每次用它记笔记的时候，都会想起绿豆温柔的笑容。这天，你在笔记本上画了一幅小小的星空图案，想送给绿豆",
+"characterName": "旁白",
+"choices": [
+{
+"text": "直接把笔记本送给绿豆“老师，这是我画的星空，送给您”",
+"nextSceneId": "scene_102",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 9
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+},
+{
+"text": "把笔记本放在他的办公桌上，附上一张小纸条",
+"nextSceneId": "scene_103",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 9
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 2
+}
+}
+]
+},
+{
+"id": "scene_71",
+"name": "细心的观察",
+"dialogueText": "绿豆笑着说“因为我看到你课本上画了很多星空图案，所以就猜你喜欢星空”。原来他一直默默关注着你",
+"characterName": "绿豆",
+"choices": [
+{
+"text": "感动地说“老师，您居然这么细心”",
+"nextSceneId": "scene_102",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 10
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+},
+{
+"text": "“老师，您是不是经常观察我啊？”",
+"nextSceneId": "scene_104",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 10
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 4
+}
+}
+]
+},
+{
+"id": "scene_72",
+"name": "随时的答疑",
+"dialogueText": "绿豆笑着说“当然可以啊，我的办公室随时为你敞开。不管是学习上的问题，还是生活上的烦恼，都可以来跟我说”",
+"characterName": "绿豆",
+"choices": [
+{
+"text": "“谢谢老师，有您在，我感觉很安心”",
+"nextSceneId": "scene_102",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 12
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+},
+{
+"text": "“老师，您平时会不会觉得很孤单啊？”",
+"nextSceneId": "scene_105",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 12
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 4
+}
+}
+]
+},
+{
+"id": "scene_73",
+"name": "优点的肯定",
+"dialogueText": "绿豆认真地说“你最大的优点是坚持和善良。不管遇到什么困难，你都没有放弃；而且你总是关心别人，很懂得体谅他人”",
+"characterName": "绿豆",
+"choices": [
+{
+"text": "“谢谢老师，您是第一个这么说我的人”",
+"nextSceneId": "scene_102",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 9
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 2
+}
+},
+{
+"text": "“老师，您也有很多优点啊，温柔、细心、有耐心”",
+"nextSceneId": "scene_106",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 9
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+}
+]
+},
+{
+"id": "scene_74",
+"name": "心动的默认",
+"dialogueText": "Lily看着你泛红的脸颊，笑着说“承认吧，你就是喜欢绿豆老师。其实我觉得你们很配啊，一个温柔，一个善良”",
+"characterName": "Lily",
+"choices": [
+{
+"text": "轻轻点头，默认了自己的心意",
+"nextSceneId": "scene_102",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 8
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 3
+}
+},
+{
+"text": "“可是我们是师生啊，这样会不会不太好？”",
+"nextSceneId": "scene_107",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 8
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 2
+}
+}
+]
+},
+{
+"id": "scene_75",
+"name": "分享的快乐",
+"dialogueText": "Lily接过糖，放进嘴里“真好吃！之源，我觉得绿豆老师真的很喜欢你，你要不要主动一点啊？”",
+"characterName": "Lily",
+"choices": [
+{
+"text": "“我...我有点不敢”",
+"nextSceneId": "scene_102",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 5
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 2
+}
+},
+{
+"text": "“我再想想吧，谢谢你们”",
+"nextSceneId": "scene_108",
+"condition": {
+"variableKey": "favorability",
+"operator": "GREATER_THAN_OR_EQUAL",
+"value": 5
+},
+"effect": {
+"variableKey": "favorability",
+"operator": "ADD",
+"value": 1
+}
+}
+]
+},
+{
+"id": "scene_76",
+"name": "习题的收获",
+"dialogueText": "你弄懂了所有的练习题，收获满满。绿豆看着你，露出欣慰的笑容“很好，看来你已经掌握了这些知识点。以后遇到难题，记得及时问我”",
+"characterName": "绿豆",
+"choices": [
+{
+"text": "“谢谢老师，您辛苦了”",
+"nextSceneId": "scene_109",
