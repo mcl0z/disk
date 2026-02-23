@@ -1,0 +1,1945 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Source UI</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  user-select: none;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+}
+
+.phone {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+  border-radius: 28px;
+  overflow: hidden;
+}
+
+:root {
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+  --ios-spring: cubic-bezier(0.25, 1, 0.25, 1);
+  --ios-ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --primary-blue: #007AFF;
+  --bg-gray: #f2f2f7;
+  --line-gray: #e5e5ea;
+  --text-gray: #86868b;
+}
+
+/* 锁屏 */
+#lock {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url(https://picsum.photos/id/1039/1080/1920) center/cover;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: calc(var(--safe-top) + 60px);
+  color: #fff;
+  border-radius: 28px;
+  transition: opacity 0.4s var(--ios-ease), transform 0.5s var(--ios-spring);
+  cursor: grab;
+  will-change: opacity, transform;
+}
+
+#lock.unlocking {
+  opacity: 0;
+  transform: translateY(-30px) scale(0.95);
+  pointer-events: none;
+}
+
+#lock:active { cursor: grabbing; }
+
+.lock-time { 
+  font-size: 68px; 
+  font-weight: 200; 
+  letter-spacing: -2px; 
+}
+
+.lock-date { 
+  font-size: 17px; 
+  opacity: 0.9; 
+  margin-top: 4px; 
+}
+
+.lock-swipe { 
+  margin-top: auto; 
+  margin-bottom: calc(var(--safe-bottom) + 40px); 
+  font-size: 15px; 
+  opacity: 0.8; 
+  cursor: pointer;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.lock-swipe:hover {
+  opacity: 1;
+  transform: translateY(-5px);
+}
+
+/* 桌面 */
+#desktop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url(https://picsum.photos/id/1039/1080/1920) center/cover;
+  padding: calc(var(--safe-top) + 60px) 24px calc(var(--safe-bottom) + 120px);
+  z-index: 1;
+  opacity: 0;
+  transform: scale(1.1);
+  border-radius: 28px;
+  transition: opacity 0.5s var(--ios-ease), transform 0.6s var(--ios-spring);
+  will-change: opacity, transform;
+}
+
+#desktop.show {
+  opacity: 1;
+  transform: scale(1);
+}
+
+#desktop.app-open {
+  transform: scale(1.15);
+  transition: transform 0.5s var(--ios-spring);
+}
+
+/* 【修复】图标网格 - 确保4x2布局 */
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 20px 16px;
+  width: 100%;
+  height: auto;
+  padding: 20px 0;
+}
+
+/* 【修复】图标项 */
+.icon-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(50px);
+  transition: opacity 0.4s ease, transform 0.5s var(--ios-spring);
+}
+
+#desktop.show .icon-item {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+#desktop.show .icon-item:nth-child(1) { transition-delay: 0.05s; }
+#desktop.show .icon-item:nth-child(2) { transition-delay: 0.08s; }
+#desktop.show .icon-item:nth-child(3) { transition-delay: 0.11s; }
+#desktop.show .icon-item:nth-child(4) { transition-delay: 0.14s; }
+#desktop.show .icon-item:nth-child(5) { transition-delay: 0.17s; }
+#desktop.show .icon-item:nth-child(6) { transition-delay: 0.20s; }
+#desktop.show .icon-item:nth-child(7) { transition-delay: 0.23s; }
+#desktop.show .icon-item:nth-child(8) { transition-delay: 0.26s; }
+
+.icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: #fff;
+  transition: all 0.2s ease;
+}
+
+.icon-item:hover .icon {
+  background: rgba(255,255,255,0.3);
+  transform: scale(1.05);
+}
+
+.icon-item:active .icon {
+  transform: scale(0.95);
+}
+
+.icon-label {
+  color: #fff;
+  font-size: 12px;
+  text-align: center;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  font-weight: 500;
+}
+
+/* Dock栏 */
+#dock {
+  position: absolute;
+  bottom: calc(var(--safe-bottom) + 20px);
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  width: 90%;
+  max-width: 400px;
+  height: 80px;
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 30px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 20px;
+  opacity: 0;
+  transition: opacity 0.4s ease, transform 0.5s var(--ios-spring);
+  will-change: opacity, transform;
+}
+
+#desktop.show ~ #dock {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  transition-delay: 0.15s;
+}
+
+.dock-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.dock-item .icon {
+  width: 55px;
+  height: 55px;
+  border-radius: 12px;
+}
+
+.dock-item:hover .icon {
+  background: rgba(255,255,255,0.35);
+  transform: scale(1.1);
+}
+
+/* 状态栏 */
+#status {
+  position: fixed;
+  top: var(--safe-top);
+  left: 0;
+  width: 100%;
+  height: 44px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 500;
+  z-index: 10000;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  will-change: opacity, transform;
+}
+
+#status.hidden {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
+/* 模糊背景 */
+#blur {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+  z-index: 90;
+  pointer-events: none;
+  transition: background 0.4s ease, backdrop-filter 0.4s ease;
+  will-change: backdrop-filter, background;
+  border-radius: 28px;
+}
+
+#blur.active {
+  background: rgba(0,0,0,0.3);
+  backdrop-filter: blur(36px) saturate(1.6);
+  -webkit-backdrop-filter: blur(36px) saturate(1.6);
+}
+
+#blur.app-open {
+  transform: scale(1.15);
+  transition: transform 0.5s var(--ios-spring), backdrop-filter 0.4s ease;
+}
+
+/* 应用窗口 */
+.app {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  z-index: 200;
+  overflow: hidden;
+  border-radius: 28px;
+  transform: scale(0);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.45s var(--ios-spring);
+}
+
+.app.show {
+  transform: scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.app-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: calc(var(--safe-top) + 44px);
+  background: var(--bg-gray);
+  display: flex;
+  align-items: flex-end;
+  padding: 0 16px 12px;
+  font-size: 17px;
+  font-weight: 600;
+  z-index: 100;
+  border-bottom: 0.5px solid var(--line-gray);
+}
+
+.app-body {
+  position: absolute;
+  top: calc(var(--safe-top) + 44px);
+  left: 0;
+  width: 100%;
+  height: calc(100% - var(--safe-top) - 44px - var(--safe-bottom));
+  background: var(--bg-gray);
+  overflow: hidden;
+  position: relative;
+}
+
+/* 页面 */
+.page {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 16px;
+  overflow-y: auto;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(0);
+  transition: all 0.3s var(--ios-ease);
+}
+
+.page.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0);
+}
+
+.page.slide-left {
+  transform: translateX(-30%);
+  opacity: 0.5;
+  visibility: visible;
+}
+
+/* 二级页面 */
+.subpage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 16px;
+  background: var(--bg-gray);
+  overflow-y: auto;
+  transform: translateX(100%);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s var(--ios-ease);
+  z-index: 50;
+}
+
+.subpage.show {
+  transform: translateX(0);
+  opacity: 1;
+  visibility: visible;
+}
+
+/* 通用列表 */
+.group {
+  background: #fff;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 0.5px solid var(--line-gray);
+  cursor: pointer;
+}
+
+.item:last-child { border-bottom: none; }
+.item:hover { background: rgba(0,0,0,0.02); }
+.item:active { background: rgba(0,0,0,0.05); }
+
+.item-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 18px;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.item-text { flex: 1; font-size: 16px; }
+.item-desc { font-size: 14px; color: var(--text-gray); text-align: right; margin-right: 8px; }
+.item-arrow { color: #c7c7cc; font-size: 14px; flex-shrink: 0; }
+
+.item-switch {
+  width: 50px;
+  height: 30px;
+  background: #e5e5ea;
+  border-radius: 15px;
+  position: relative;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.item-switch.active { background: var(--primary-blue); }
+.item-switch::after {
+  content: '';
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  background: #fff;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+}
+.item-switch.active::after { left: 22px; }
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--primary-blue);
+  font-size: 16px;
+  margin-bottom: 20px;
+  cursor: pointer;
+  width: fit-content;
+}
+.back-btn:hover { opacity: 0.7; }
+
+/* 关于本机 */
+.about-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px 0 30px;
+}
+.about-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, var(--primary-blue), #5856D6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  color: #fff;
+  margin-bottom: 16px;
+}
+.about-name { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+.about-version { font-size: 15px; color: var(--text-gray); }
+
+/* 拨号盘 */
+.dialpad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  padding: 20px 40px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+.dial-btn {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: #e5e5ea;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  font-weight: 400;
+  cursor: pointer;
+  margin: 0 auto;
+  transition: all 0.2s ease;
+}
+.dial-btn:hover { background: #d1d1d6; transform: scale(1.05); }
+.dial-btn:active { background: #c7c7cc; transform: scale(0.95); }
+.dial-btn small { font-size: 10px; margin-top: -4px; }
+
+.call-btn {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: #34C759;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  color: #fff;
+  margin: 20px auto 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.call-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+.call-btn:active { transform: scale(0.95); }
+
+/* 消息 */
+.chat-list { display: flex; flex-direction: column; gap: 0; }
+.chat-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 0.5px solid var(--line-gray);
+  cursor: pointer;
+}
+.chat-item:hover { background: rgba(0,0,0,0.02); }
+.chat-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--primary-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 20px;
+  margin-right: 12px;
+}
+.chat-info { flex: 1; }
+.chat-name { font-size: 16px; font-weight: 500; margin-bottom: 4px; }
+.chat-msg { font-size: 14px; color: var(--text-gray); }
+.chat-time { font-size: 13px; color: var(--text-gray); }
+
+/* 音乐 */
+.music-player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px 20px;
+}
+.music-cover {
+  width: 280px;
+  height: 280px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #FF2D55, #FF3B30);
+  margin-bottom: 30px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+.music-info { text-align: center; margin-bottom: 30px; }
+.music-title { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+.music-singer { font-size: 16px; color: var(--text-gray); }
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--line-gray);
+  border-radius: 3px;
+  margin-bottom: 8px;
+  position: relative;
+}
+.progress-fill { width: 40%; height: 100%; background: var(--primary-blue); border-radius: 3px; }
+.progress-time {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 12px;
+  color: var(--text-gray);
+  margin-bottom: 30px;
+}
+.play-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 300px;
+}
+.play-btn {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.play-btn:hover { transform: scale(1.05); filter: brightness(1.2); }
+.play-btn:active { transform: scale(0.95); }
+
+/* 相机 */
+#page-camera { padding: 0; background: #000; }
+.camera-top-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: calc(var(--safe-top) + 10px) 20px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 100;
+}
+.camera-top-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.camera-top-btn:hover { background: rgba(255,255,255,0.2); }
+.camera-top-btn:active { transform: scale(0.9); }
+.camera-top-btn.active { color: #FFD60A; }
+
+.camera-viewfinder {
+  width: 100%;
+  height: 100%;
+  background: url(https://picsum.photos/id/1002/1080/1920) center/cover;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.focus-box {
+  width: 80px;
+  height: 80px;
+  border: 2px solid #FFD60A;
+  border-radius: 8px;
+  position: absolute;
+  opacity: 0;
+  transform: scale(1.2);
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+.focus-box.show { opacity: 1; transform: scale(1); }
+
+.grid-lines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background-image: 
+    linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
+  background-size: 33.33% 33.33%;
+  opacity: 0;
+  transition: all 0.2s ease;
+}
+.grid-lines.show { opacity: 1; }
+
+.camera-bottom-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 0 20px calc(var(--safe-bottom) + 20px);
+  z-index: 100;
+}
+.camera-mode-slider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 30px;
+}
+.camera-mode {
+  color: rgba(255,255,255,0.6);
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.camera-mode:hover { color: rgba(255,255,255,0.8); }
+.camera-mode.active { color: #fff; font-size: 17px; font-weight: 600; transform: scale(1.1); }
+.camera-capture-area {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.camera-album-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  background: url(https://picsum.photos/id/1002/200/200) center/cover;
+  border: 2px solid rgba(255,255,255,0.3);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.camera-album-btn:hover { transform: scale(1.05); border-color: rgba(255,255,255,0.6); }
+.camera-capture-btn {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: #fff;
+  padding: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.camera-capture-btn:hover { transform: scale(1.05); }
+.camera-capture-btn:active { transform: scale(0.9); }
+.camera-capture-btn-inner { width: 100%; height: 100%; border-radius: 50%; border: 3px solid #000; }
+.camera-switch-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.camera-switch-btn:hover { background: rgba(255,255,255,0.2); }
+.camera-switch-btn:active { transform: scale(0.9) rotate(180deg); }
+
+/* 照片 */
+#page-photo { padding: 0; }
+#page-photo > div {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+}
+#page-photo > div > div { aspect-ratio: 1/1; background: linear-gradient(135deg, #FF9500, #FF3B30); }
+#page-photo > div > div:nth-child(2) { background: linear-gradient(135deg, var(--primary-blue), #5856D6); }
+#page-photo > div > div:nth-child(3) { background: linear-gradient(135deg, #34C759, #007AFF); }
+
+/* 输入框 */
+input[type="text"] { cursor: text; user-select: text; -webkit-user-select: text; }
+
+/* 滚动条 */
+.page::-webkit-scrollbar, .subpage::-webkit-scrollbar { width: 6px; }
+.page::-webkit-scrollbar-thumb, .subpage::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 3px; }
+
+/* Home Indicator */
+.home-indicator {
+  position: absolute;
+  bottom: calc(var(--safe-bottom) + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 134px;
+  height: 5px;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 3px;
+  z-index: 10001;
+  transition: all 0.3s ease;
+  will-change: opacity, transform, background;
+  cursor: pointer;
+}
+.app.show ~ .home-indicator { background: rgba(255, 255, 255, 0.9); }
+.home-indicator:hover { opacity: 0.8; }
+
+/* 关闭按钮 */
+.close-btn {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  background: rgba(0,0,0,0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  color: #333;
+  transition: all 0.2s;
+  z-index: 101;
+}
+.close-btn:hover { background: rgba(0,0,0,0.2); }
+
+/* 桌面端提示 */
+@media (hover: hover) and (pointer: fine) {
+  .lock-swipe::after { content: ' (点击或按空格键)'; font-size: 12px; opacity: 0.7; }
+}
+</style>
+<base target="_blank">
+</head>
+
+<body>
+<div class="phone">
+
+  <!-- 锁屏 -->
+  <div id="lock">
+    <div class="lock-time">10:30</div>
+    <div class="lock-date">周二 2月18日</div>
+    <div class="lock-swipe">上滑解锁</div>
+  </div>
+
+  <!-- 状态栏 -->
+  <div id="status">
+    <div class="time">10:30</div>
+    <div class="info">📶 🔋</div>
+  </div>
+
+  <!-- 模糊背景 -->
+  <div id="blur"></div>
+
+  <!-- 桌面 -->
+  <div id="desktop">
+    <!-- 【修复】4x2网格布局 -->
+    <div class="icon-grid">
+      <div class="icon-item" data-app="phone">
+        <div class="icon">📱</div>
+        <div class="icon-label">电话</div>
+      </div>
+      <div class="icon-item" data-app="msg">
+        <div class="icon">💬</div>
+        <div class="icon-label">信息</div>
+      </div>
+      <div class="icon-item" data-app="safari">
+        <div class="icon">🌐</div>
+        <div class="icon-label">浏览器</div>
+      </div>
+      <div class="icon-item" data-app="camera">
+        <div class="icon">📷</div>
+        <div class="icon-label">相机</div>
+      </div>
+      <div class="icon-item" data-app="photo">
+        <div class="icon">🖼️</div>
+        <div class="icon-label">照片</div>
+      </div>
+      <div class="icon-item" data-app="music">
+        <div class="icon">🎵</div>
+        <div class="icon-label">音乐</div>
+      </div>
+      <div class="icon-item" data-app="video">
+        <div class="icon">🎬</div>
+        <div class="icon-label">视频</div>
+      </div>
+      <div class="icon-item" data-app="setting">
+        <div class="icon">⚙️</div>
+        <div class="icon-label">设置</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dock栏 -->
+  <div id="dock">
+    <div class="dock-item" data-app="phone">
+      <div class="icon">📱</div>
+    </div>
+    <div class="dock-item" data-app="safari">
+      <div class="icon">🌐</div>
+    </div>
+    <div class="dock-item" data-app="msg">
+      <div class="icon">💬</div>
+    </div>
+    <div class="dock-item" data-app="setting">
+      <div class="icon">⚙️</div>
+    </div>
+  </div>
+
+  <!-- 应用窗口 -->
+  <div class="app">
+    <div class="app-header">
+      <span id="app-title">标题</span>
+      <div class="close-btn" onclick="closeApp()">✕</div>
+    </div>
+    <div class="app-body">
+<!-- 电话应用 -->
+      <div class="page" id="page-phone">
+        <div class="group">
+          <div class="item" data-subpage="phone-dial">
+            <div class="item-icon" style="background:#34C759">📞</div>
+            <div class="item-text">拨号键盘</div>
+            <div class="item-arrow">></div>
+          </div>
+          <div class="item" data-subpage="phone-recent">
+            <div class="item-icon" style="background:#FF3B30">📞</div>
+            <div class="item-text">最近通话</div>
+            <div class="item-arrow">></div>
+          </div>
+          <div class="item" data-subpage="phone-contact">
+            <div class="item-icon" style="background:var(--primary-blue)">👤</div>
+            <div class="item-text">联系人</div>
+            <div class="item-arrow">></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subpage" id="subpage-phone-dial">
+        <div class="back-btn" onclick="goBack()">← 电话</div>
+        <div style="text-align: center; font-size: 32px; margin: 20px 0; letter-spacing: 2px;">138 0000 0000</div>
+        <div class="dialpad">
+          <div class="dial-btn">1<small></small></div>
+          <div class="dial-btn">2<small>ABC</small></div>
+          <div class="dial-btn">3<small>DEF</small></div>
+          <div class="dial-btn">4<small>GHI</small></div>
+          <div class="dial-btn">5<small>JKL</small></div>
+          <div class="dial-btn">6<small>MNO</small></div>
+          <div class="dial-btn">7<small>PQRS</small></div>
+          <div class="dial-btn">8<small>TUV</small></div>
+          <div class="dial-btn">9<small>WXYZ</small></div>
+          <div class="dial-btn">*</div>
+          <div class="dial-btn">0<small>+</small></div>
+          <div class="dial-btn">#</div>
+        </div>
+        <div class="call-btn">📞</div>
+      </div>
+
+      <div class="subpage" id="subpage-phone-recent">
+        <div class="back-btn" onclick="goBack()">← 电话</div>
+        <div class="group">
+          <div class="chat-item">
+            <div class="chat-avatar">👤</div>
+            <div class="chat-info">
+              <div class="chat-name">张三</div>
+              <div class="chat-msg">移动 13800000000</div>
+            </div>
+            <div class="chat-time">今天 10:20</div>
+          </div>
+          <div class="chat-item">
+            <div class="chat-avatar">👤</div>
+            <div class="chat-info">
+              <div class="chat-name">李四</div>
+              <div class="chat-msg">联通 13000000000</div>
+            </div>
+            <div class="chat-time">昨天 18:30</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subpage" id="subpage-phone-contact">
+        <div class="back-btn" onclick="goBack()">← 电话</div>
+        <div class="group">
+          <div class="chat-item">
+            <div class="chat-avatar">👤</div>
+            <div class="chat-info">
+              <div class="chat-name">张三</div>
+            </div>
+          </div>
+          <div class="chat-item">
+            <div class="chat-avatar">👤</div>
+            <div class="chat-info">
+              <div class="chat-name">李四</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 信息应用 -->
+      <div class="page" id="page-msg">
+        <div class="chat-list">
+          <div class="chat-item" data-subpage="msg-chat">
+            <div class="chat-avatar">👤</div>
+            <div class="chat-info">
+              <div class="chat-name">张三</div>
+              <div class="chat-msg">晚上一起吃饭吗？</div>
+            </div>
+            <div class="chat-time">10:20</div>
+          </div>
+          <div class="chat-item">
+            <div class="chat-avatar">👥</div>
+            <div class="chat-info">
+              <div class="chat-name">公司群</div>
+              <div class="chat-msg">明天上午10点开周会</div>
+            </div>
+            <div class="chat-time">昨天</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subpage" id="subpage-msg-chat">
+        <div class="back-btn" onclick="goBack()">← 信息</div>
+        <div style="display: flex; flex-direction: column; gap: 16px; padding: 10px 0;">
+          <div style="display: flex; align-items: flex-end; gap: 8px;">
+            <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--primary-blue); display: flex; align-items: center; justify-content: center; color: #fff;">👤</div>
+            <div style="background: #e5e5ea; padding: 10px 16px; border-radius: 18px; max-width: 70%;">晚上一起吃饭吗？</div>
+          </div>
+          <div style="display: flex; align-items: flex-end; gap: 8px; justify-content: flex-end;">
+            <div style="background: var(--primary-blue); color: #fff; padding: 10px 16px; border-radius: 18px; max-width: 70%;">可以啊，去哪吃？</div>
+          </div>
+        </div>
+        <div style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 10px 16px; background: #fff; border-top: 0.5px solid var(--line-gray); display: flex; align-items: center; gap: 10px;">
+          <input type="text" style="flex: 1; padding: 10px 16px; border-radius: 20px; border: 0.5px solid var(--line-gray); outline: none;" placeholder="输入消息">
+          <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--primary-blue); display: flex; align-items: center; justify-content: center; color: #fff;">↑</div>
+        </div>
+      </div>
+
+      <!-- 浏览器应用 -->
+      <div class="page" id="page-safari">
+        <div style="margin-bottom: 20px;">
+          <input type="text" style="width: 100%; padding: 12px 16px; border-radius: 12px; border: none; outline: none; background: #fff; font-size: 16px;" placeholder="搜索或输入网址">
+        </div>
+        <div class="group">
+          <div class="item">
+            <div class="item-icon" style="background:var(--primary-blue)">🔖</div>
+            <div class="item-text">书签</div>
+            <div class="item-arrow">></div>
+          </div>
+          <div class="item">
+            <div class="item-icon" style="background:#FF9500">⏱️</div>
+            <div class="item-text">历史记录</div>
+            <div class="item-arrow">></div>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 30px;">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer;">
+            <div style="width: 50px; height: 50px; border-radius: 12px; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 24px;">🔍</div>
+            <div style="font-size: 12px;">百度</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 相机应用 -->
+      <div class="page" id="page-camera">
+        <div class="camera-top-bar">
+          <div class="camera-top-btn" id="flash-btn">⚡️</div>
+          <div class="camera-top-btn" id="live-btn">◯</div>
+          <div class="camera-top-btn" id="night-btn">🌙</div>
+          <div class="camera-top-btn" id="grid-btn">▦</div>
+        </div>
+        <div class="camera-viewfinder" id="viewfinder">
+          <div class="focus-box" id="focus-box"></div>
+          <div class="grid-lines" id="grid-lines"></div>
+        </div>
+        <div class="camera-bottom-bar">
+          <div class="camera-mode-slider">
+            <div class="camera-mode">延时摄影</div>
+            <div class="camera-mode">慢动作</div>
+            <div class="camera-mode active">照片</div>
+            <div class="camera-mode">视频</div>
+            <div class="camera-mode">人像</div>
+          </div>
+          <div class="camera-capture-area">
+            <div class="camera-album-btn"></div>
+            <div class="camera-capture-btn" id="capture-btn">
+              <div class="camera-capture-btn-inner"></div>
+            </div>
+            <div class="camera-switch-btn" id="switch-btn">⟳</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 照片应用 -->
+      <div class="page" id="page-photo">
+        <div>
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+      </div>
+
+      <!-- 音乐应用 -->
+      <div class="page" id="page-music">
+        <div class="group">
+          <div class="item" data-subpage="music-player">
+            <div class="item-icon" style="background:#FF2D55">🎵</div>
+            <div class="item-text">正在播放</div>
+            <div class="item-arrow">></div>
+          </div>
+          <div class="item">
+            <div class="item-icon" style="background:#FF9500">📋</div>
+            <div class="item-text">播放列表</div>
+            <div class="item-arrow">></div>
+          </div>
+          <div class="item">
+            <div class="item-icon" style="background:var(--primary-blue)">❤️</div>
+            <div class="item-text">我的收藏</div>
+            <div class="item-arrow">></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subpage" id="subpage-music-player">
+        <div class="back-btn" onclick="goBack()">← 音乐</div>
+        <div class="music-player">
+          <div class="music-cover"></div>
+          <div class="music-info">
+            <div class="music-title">歌曲名称</div>
+            <div class="music-singer">歌手名称</div>
+          </div>
+          <div style="width: 100%;">
+            <div class="progress-bar">
+              <div class="progress-fill"></div>
+            </div>
+            <div class="progress-time">
+              <span>1:20</span>
+              <span>3:45</span>
+            </div>
+          </div>
+          <div class="play-controls">
+            <div style="font-size: 24px; cursor: pointer;">⏮️</div>
+            <div class="play-btn">▶️</div>
+            <div style="font-size: 24px; cursor: pointer;">⏭️</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 视频应用 -->
+      <div class="page" id="page-video">
+        <div class="group">
+          <div class="item">
+            <div class="item-icon" style="background:#FF9500">🎬</div>
+            <div class="item-text">我的视频</div>
+            <div class="item-arrow">></div>
+          </div>
+          <div class="item">
+            <div class="item-icon" style="background:var(--primary-blue)">⏱️</div>
+            <div class="item-text">最近播放</div>
+            <div class="item-arrow">></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 设置应用 -->
+      <div class="page" id="page-setting">
+        <div class="group">
+          <div class="item" data-subpage="setting-network">
+            <div class="item-icon" style="background:var(--primary-blue)">📶</div>
+            <div class="item-text">WLAN</div>
+            <div class="item-arrow">></div>
+          </div>
+          <div class="item" data-subpage="setting-bluetooth">
+            <div class="item-icon" style="background:#007AFF">🔵</div>
+            <div class="item-text">蓝牙</div>
+            <div class="item-arrow">></div>
+          </div>
+          <div class="item" data-subpage="setting-cellular">
+            <div class="item-icon" style="background:#34C759">📱</div>
+            <div class="item-text">移动网络</div>
+            <div class="item-arrow">></div>
+          </div>
+        </div>
+        <div class="group">
+          <div class="item" data-subpage="setting-notification">
+            <div class="item-icon" style="background:#FF3B30">🔔</div>
+            <div class="item-text">通知</div>
+            <div class="item-arrow">></div>
+          </div>
+          <div class="item" data-subpage="setting-sound">
+            <div class="item-icon" style="background:#FF9500">🔊</div>
+            <div class="item-text">声音与触感</div>
+            <div class="item-arrow">></div>
+          </div>
+          <div class="item" data-subpage="setting-display">
+            <div class="item-icon" style="background:#007AFF">☀️</div>
+            <div class="item-text">显示与亮度</div>
+            <div class="item-arrow">></div>
+          </div>
+        </div>
+        <div class="group">
+          <div class="item" data-subpage="setting-general">
+            <div class="item-icon" style="background:#86868b">⚙️</div>
+            <div class="item-text">通用</div>
+            <div class="item-arrow">></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 设置子页面 -->
+      <div class="subpage" id="subpage-setting-network">
+        <div class="back-btn" onclick="goBack()">← 设置</div>
+        <div class="group">
+          <div class="item">
+            <div class="item-text">无线局域网</div>
+            <div class="item-switch active"></div>
+          </div>
+        </div>
+        <div class="group">
+          <div class="item">
+            <div class="item-text">WiFi1</div>
+            <div class="item-arrow">></div>
+          </div>
+          <div class="item">
+            <div class="item-text">WiFi 2</div>
+            <div class="item-arrow">></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subpage" id="subpage-setting-bluetooth">
+        <div class="back-btn" onclick="goBack()">← 设置</div>
+        <div class="group">
+          <div class="item">
+            <div class="item-text">蓝牙</div>
+            <div class="item-switch active"></div>
+          </div>
+        </div>
+        <div class="group">
+          <div class="item">
+            <div class="item-text">Source 耳机</div>
+            <div class="item-arrow">></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subpage" id="subpage-setting-notification">
+        <div class="back-btn" onclick="goBack()">← 设置</div>
+        <div class="group">
+          <div class="item">
+            <div class="item-text">允许通知</div>
+            <div class="item-switch active"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subpage" id="subpage-setting-general">
+        <div class="back-btn" onclick="goBack()">← 设置</div>
+        <div class="group">
+          <div class="item" data-subpage="setting-about">
+            <div class="item-text">关于本机</div>
+            <div class="item-arrow">></div>
+          </div>
+          <div class="item">
+            <div class="item-text">软件更新</div>
+            <div class="item-desc">已是最新版本</div>
+            <div class="item-arrow">></div>
+          </div>
+          <div class="item">
+            <div class="item-text">存储空间</div>
+            <div class="item-desc">20GB/512GB</div>
+            <div class="item-arrow">></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subpage" id="subpage-setting-about">
+        <div class="back-btn" onclick="goBack()">← 通用</div>
+        <div class="about-header">
+          <div class="about-icon">📱</div>
+          <div class="about-name">Source UI</div>
+          <div class="about-version">版本 1.0.1</div>
+        </div>
+        <div class="group">
+          <div class="item"><div class="item-text">名称</div><div class="item-desc">Source UI</div></div>
+          <div class="item"><div class="item-text">软件版本</div><div class="item-desc">Source UI 1.0.1</div></div>
+          <div class="item"><div class="item-text">型号名称</div><div class="item-desc">Source Engine Simulator ver 1.0</div></div>
+          <div class="item"><div class="item-text">型号号码</div><div class="item-desc">SUI-2026</div></div>
+          <div class="item"><div class="item-text">序列号</div><div class="item-desc">SUI20260218001</div></div>
+          <div class="item"><div class="item-text">处理器</div><div class="item-desc">Source A1</div></div>
+          <div class="item"><div class="item-text">内存</div><div class="item-desc">16GB</div></div>
+          <div class="item"><div class="item-text">总容量</div><div class="item-desc">512GB</div></div>
+        </div>
+        <div class="group">
+          <div class="item"><div class="item-text">版权信息</div><div class="item-desc">© 2026 Source UI</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Home Indicator 小白条 -->
+  <div class="home-indicator" id="home-indicator"></div>
+
+</div>
+
+<script>
+// ==================== 核心变量 ====================
+const lock = document.getElementById('lock');
+const desktop = document.getElementById('desktop');
+const app = document.querySelector('.app');
+const blur = document.getElementById('blur');
+const status = document.getElementById('status');
+const appHeader = document.querySelector('.app-header');
+const appTitle = document.getElementById('app-title');
+const pages = document.querySelectorAll('.page');
+const subpages = document.querySelectorAll('.subpage');
+const homeIndicator = document.getElementById('home-indicator');
+
+let lastIcon = null;
+let currentPage = null;
+
+const appTitleMap = {
+  phone: '电话', msg: '信息', safari: '浏览器', camera: '相机',
+  photo: '照片', music: '音乐', video: '视频', setting: '设置'
+};
+
+// ==================== 锁屏解锁系统 ====================
+let lockStartY = 0;
+let lockStartX = 0;
+let isLockDragging = false;
+let lockThreshold = 80;
+
+function handleLockStart(y, x) {
+  if (desktop.classList.contains('show')) return;
+  lockStartY = y;
+  lockStartX = x;
+  isLockDragging = true;
+}
+
+function handleLockEnd(y, x) {
+  if (!isLockDragging) return;
+  isLockDragging = false;
+
+  if (desktop.classList.contains('show')) return;
+
+  const diffY = lockStartY - y;
+  const diffX = Math.abs(lockStartX - x);
+
+  if (diffY > lockThreshold && diffX < 60) {
+    unlockScreen();
+  }
+}
+
+function unlockScreen() {
+  lock.classList.add('unlocking');
+  desktop.classList.add('show');
+
+  setTimeout(() => {
+    lock.style.display = 'none';
+  }, 500);
+}
+
+// 触摸事件
+document.addEventListener('touchstart', e => {
+  if (!desktop.classList.contains('show')) {
+    handleLockStart(e.touches[0].clientY, e.touches[0].clientX);
+  }
+}, { passive: true });
+
+document.addEventListener('touchend', e => {
+  handleLockEnd(e.changedTouches[0].clientY, e.changedTouches[0].clientX);
+});
+
+// 鼠标事件
+document.addEventListener('mousedown', e => {
+  if (!desktop.classList.contains('show')) {
+    handleLockStart(e.clientY, e.clientX);
+  }
+});
+
+document.addEventListener('mouseup', e => {
+  handleLockEnd(e.clientY, e.clientX);
+});
+
+// 点击解锁
+lock.addEventListener('click', function(e) {
+  if (e.target.classList.contains('lock-swipe') || e.target.id === 'lock') {
+    unlockScreen();
+  }
+});
+
+// 键盘解锁
+document.addEventListener('keydown', e => {
+  if (!desktop.classList.contains('show') && (e.key === ' ' || e.key === 'Enter')) {
+    e.preventDefault();
+    unlockScreen();
+  }
+});
+
+// ==================== 时间更新 ====================
+function updateTime() {
+  const t = new Date();
+  const h = String(t.getHours()).padStart(2, '0');
+  const m = String(t.getMinutes()).padStart(2, '0');
+  const timeText = h + ':' + m;
+
+  const lockTime = document.querySelector('.lock-time');
+  const statusTime = document.querySelector('#status .time');
+
+  if (lockTime) lockTime.innerText = timeText;
+  if (statusTime) statusTime.innerText = timeText;
+}
+
+setInterval(updateTime, 1000);
+updateTime();
+
+// ==================== 应用打开 ====================
+function resetAllPages() {
+  pages.forEach(page => {
+    page.classList.remove('show', 'slide-left');
+  });
+  subpages.forEach(subpage => {
+    subpage.classList.remove('show');
+  });
+  currentPage = null;
+  appHeader.style.display = 'flex';
+}
+
+function openApp(appName, clickIcon) {
+  resetAllPages();
+  lastIcon = clickIcon;
+
+  const rect = clickIcon.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  app.style.transformOrigin = cx + 'px ' + cy + 'px';
+
+  const targetPage = document.getElementById('page-' + appName);
+  if (!targetPage) return;
+
+  currentPage = targetPage;
+  currentPage.classList.add('show');
+
+  if (appName === 'camera') {
+    appHeader.style.display = 'none';
+  } else {
+    appHeader.style.display = 'flex';
+    if (appTitle) appTitle.innerText = appTitleMap[appName] || '';
+  }
+
+  // 应用打开效果：壁纸缩放 + 隐藏状态栏
+  desktop.classList.add('app-open');
+  blur.classList.add('app-open');
+  status.classList.add('hidden');
+
+  app.classList.add('show');
+  blur.classList.add('active');
+}
+
+// 绑定图标点击 - 使用data-app属性
+document.querySelectorAll('[data-app]').forEach(icon => {
+  icon.addEventListener('click', function() {
+    const appName = this.getAttribute('data-app');
+    openApp(appName, this);
+  });
+});
+
+// ==================== 二级页面 ====================
+document.querySelectorAll('[data-subpage]').forEach(item => {
+  item.addEventListener('click', function() {
+    const subpageId = this.getAttribute('data-subpage');
+    const targetSubpage = document.getElementById('subpage-' + subpageId);
+    if (!targetSubpage || !currentPage) return;
+
+    currentPage.classList.add('slide-left');
+    void targetSubpage.offsetWidth;
+    targetSubpage.classList.add('show');
+  });
+});
+
+function goBack() {
+  if (!currentPage) return;
+  subpages.forEach(subpage => {
+    subpage.classList.remove('show');
+  });
+  currentPage.classList.remove('slide-left');
+}
+
+window.goBack = goBack;
+
+// ==================== 应用退出系统 ====================
+let appStartY = 0;
+let appStartX = 0;
+let isAppDragging = false;
+let appThreshold = 100;
+
+function handleAppStart(y, x) {
+  if (!app.classList.contains('show')) return;
+  appStartY = y;
+  appStartX = x;
+  isAppDragging = true;
+}
+
+function handleAppEnd(y, x) {
+  if (!isAppDragging) return;
+  isAppDragging = false;
+
+  if (!app.classList.contains('show') || !lastIcon) return;
+
+  const diffY = appStartY - y;
+  const diffX = Math.abs(appStartX - x);
+
+  if (diffY > appThreshold && diffX < 50) {
+    closeApp();
+  }
+}
+
+function closeApp() {
+  if (!lastIcon) return;
+
+  const rect = lastIcon.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  app.style.transformOrigin = cx + 'px ' + cy + 'px';
+
+  app.classList.remove('show');
+  blur.classList.remove('active');
+
+  // 恢复壁纸缩放和状态栏
+  desktop.classList.remove('app-open');
+  blur.classList.remove('app-open');
+  status.classList.remove('hidden');
+
+  setTimeout(() => {
+    resetAllPages();
+  }, 450);
+}
+
+window.closeApp = closeApp;
+
+// 触摸事件
+document.addEventListener('touchstart', e => {
+  if (app.classList.contains('show')) {
+    handleAppStart(e.touches[0].clientY, e.touches[0].clientX);
+  }
+}, { passive: true });
+
+document.addEventListener('touchend', e => {
+  handleAppEnd(e.changedTouches[0].clientY, e.changedTouches[0].clientX);
+});
+
+// 鼠标事件
+document.addEventListener('mousedown', e => {
+  if (app.classList.contains('show')) {
+    handleAppStart(e.clientY, e.clientX);
+  }
+});
+
+document.addEventListener('mouseup', e => {
+  handleAppEnd(e.clientY, e.clientX);
+});
+
+// ESC键退出
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && app.classList.contains('show')) {
+    closeApp();
+  }
+});
+
+// 小白条点击退出
+if (homeIndicator) {
+  homeIndicator.addEventListener('click', () => {
+    if (app.classList.contains('show')) {
+      closeApp();
+    }
+  });
+}
+
+// ==================== 开关交互 ====================
+document.querySelectorAll('.item-switch').forEach(switchEl => {
+  switchEl.addEventListener('click', (e) => {
+    e.stopPropagation();
+    switchEl.classList.toggle('active');
+  });
+});
+
+// ==================== 相机交互 ====================
+const viewfinder = document.getElementById('viewfinder');
+const focusBox = document.getElementById('focus-box');
+const gridBtn = document.getElementById('grid-btn');
+const gridLines = document.getElementById('grid-lines');
+const captureBtn = document.getElementById('capture-btn');
+
+if (viewfinder) {
+  viewfinder.addEventListener('click', (e) => {
+    const rect = viewfinder.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    if (focusBox) {
+      focusBox.style.left = (x - 40) + 'px';
+      focusBox.style.top = (y - 40) + 'px';
+      focusBox.classList.remove('show');
+      void focusBox.offsetWidth;
+      focusBox.classList.add('show');
+
+      setTimeout(() => {
+        focusBox.classList.remove('show');
+      }, 2000);
+    }
+  });
+}
+
+if (gridBtn && gridLines) {
+  gridBtn.addEventListener('click', () => {
+    gridBtn.classList.toggle('active');
+    gridLines.classList.toggle('show');
+  });
+}
+
+if (captureBtn && viewfinder) {
+  captureBtn.addEventListener('click', () => {
+    viewfinder.style.opacity = '0';
+    setTimeout(() => {
+      viewfinder.style.opacity = '1';
+    }, 100);
+  });
+}
+
+document.querySelectorAll('.camera-mode').forEach(mode => {
+  mode.addEventListener('click', () => {
+    document.querySelectorAll('.camera-mode').forEach(m => m.classList.remove('active'));
+    mode.classList.add('active');
+  });
+});
+
+document.querySelectorAll('.camera-top-btn').forEach(btn => {
+  if (btn.id !== 'grid-btn') {
+    btn.addEventListener('click', () => {
+      btn.classList.toggle('active');
+    });
+  }
+});
+
+console.log('%c Source UI 加载完成 ', 'background: #007AFF; color: white; padding: 4px 8px; border-radius: 4px;');
+console.log('解锁方式: 点击/空格键/上滑');
+console.log('退出应用: 点击✕/ESC/小白条/上滑');
+</script>
+    </div>
+  </div>
+
+  <!-- Home Indicator -->
+  <div class="home-indicator" id="home-indicator"></div>
+
+</div>
+
+<script>
+// ==================== 核心变量 ====================
+const lock = document.getElementById('lock');
+const desktop = document.getElementById('desktop');
+const app = document.querySelector('.app');
+const blur = document.getElementById('blur');
+const status = document.getElementById('status');
+const appHeader = document.querySelector('.app-header');
+const appTitle = document.getElementById('app-title');
+const pages = document.querySelectorAll('.page');
+const subpages = document.querySelectorAll('.subpage');
+const homeIndicator = document.getElementById('home-indicator');
+
+let lastIcon = null;
+let currentPage = null;
+
+const appTitleMap = {
+  phone: '电话', msg: '信息', safari: '浏览器', camera: '相机',
+  photo: '照片', music: '音乐', video: '视频', setting: '设置'
+};
+
+// ==================== 锁屏解锁 ====================
+let lockStartY = 0, lockStartX = 0, isLockDragging = false;
+
+function handleLockStart(y, x) {
+  if (desktop.classList.contains('show')) return;
+  lockStartY = y; lockStartX = x; isLockDragging = true;
+}
+
+function handleLockEnd(y, x) {
+  if (!isLockDragging) return;
+  isLockDragging = false;
+  if (desktop.classList.contains('show')) return;
+
+  const diffY = lockStartY - y;
+  const diffX = Math.abs(lockStartX - x);
+
+  if (diffY > 80 && diffX < 60) unlockScreen();
+}
+
+function unlockScreen() {
+  lock.classList.add('unlocking');
+  desktop.classList.add('show');
+  setTimeout(() => { lock.style.display = 'none'; }, 500);
+}
+
+document.addEventListener('touchstart', e => {
+  if (!desktop.classList.contains('show')) {
+    handleLockStart(e.touches[0].clientY, e.touches[0].clientX);
+  }
+}, { passive: true });
+
+document.addEventListener('touchend', e => {
+  handleLockEnd(e.changedTouches[0].clientY, e.changedTouches[0].clientX);
+});
+
+document.addEventListener('mousedown', e => {
+  if (!desktop.classList.contains('show')) {
+    handleLockStart(e.clientY, e.clientX);
+  }
+});
+
+document.addEventListener('mouseup', e => {
+  handleLockEnd(e.clientY, e.clientX);
+});
+
+lock.addEventListener('click', function(e) {
+  if (e.target.classList.contains('lock-swipe') || e.target.id === 'lock') {
+    unlockScreen();
+  }
+});
+
+document.addEventListener('keydown', e => {
+  if (!desktop.classList.contains('show') && (e.key === ' ' || e.key === 'Enter')) {
+    e.preventDefault();
+    unlockScreen();
+  }
+});
+
+// ==================== 时间更新 ====================
+function updateTime() {
+  const t = new Date();
+  const h = String(t.getHours()).padStart(2, '0');
+  const m = String(t.getMinutes()).padStart(2, '0');
+  const timeText = h + ':' + m;
+
+  const lockTime = document.querySelector('.lock-time');
+  const statusTime = document.querySelector('#status .time');
+
+  if (lockTime) lockTime.innerText = timeText;
+  if (statusTime) statusTime.innerText = timeText;
+}
+setInterval(updateTime, 1000);
+updateTime();
+
+// ==================== 应用管理 ====================
+function resetAllPages() {
+  pages.forEach(page => page.classList.remove('show', 'slide-left'));
+  subpages.forEach(subpage => subpage.classList.remove('show'));
+  currentPage = null;
+  appHeader.style.display = 'flex';
+}
+
+function openApp(appName, clickIcon) {
+  resetAllPages();
+  lastIcon = clickIcon;
+
+  const rect = clickIcon.getBoundingClientRect();
+  app.style.transformOrigin = (rect.left + rect.width/2) + 'px ' + (rect.top + rect.height/2) + 'px';
+
+  const targetPage = document.getElementById('page-' + appName);
+  if (!targetPage) return;
+
+  currentPage = targetPage;
+  currentPage.classList.add('show');
+
+  if (appName === 'camera') {
+    appHeader.style.display = 'none';
+  } else {
+    appHeader.style.display = 'flex';
+    if (appTitle) appTitle.innerText = appTitleMap[appName] || '';
+  }
+
+  desktop.classList.add('app-open');
+  blur.classList.add('app-open');
+  status.classList.add('hidden');
+
+  app.classList.add('show');
+  blur.classList.add('active');
+}
+
+// 绑定桌面图标
+document.querySelectorAll('.icon-item[data-app]').forEach(icon => {
+  icon.addEventListener('click', function() {
+    openApp(this.getAttribute('data-app'), this);
+  });
+});
+
+// 绑定Dock图标
+document.querySelectorAll('.dock-item[data-app]').forEach(icon => {
+  icon.addEventListener('click', function() {
+    openApp(this.getAttribute('data-app'), this);
+  });
+});
+
+// ==================== 二级页面 ====================
+document.querySelectorAll('[data-subpage]').forEach(item => {
+  item.addEventListener('click', function() {
+    const subpageId = this.getAttribute('data-subpage');
+    const targetSubpage = document.getElementById('subpage-' + subpageId);
+    if (!targetSubpage || !currentPage) return;
+
+    currentPage.classList.add('slide-left');
+    void targetSubpage.offsetWidth;
+    targetSubpage.classList.add('show');
+  });
+});
+
+function goBack() {
+  if (!currentPage) return;
+  subpages.forEach(subpage => subpage.classList.remove('show'));
+  currentPage.classList.remove('slide-left');
+}
+window.goBack = goBack;
+
+// ==================== 应用退出 ====================
+let appStartY = 0, appStartX = 0, isAppDragging = false;
+
+function handleAppStart(y, x) {
+  if (!app.classList.contains('show')) return;
+  appStartY = y; appStartX = x; isAppDragging = true;
+}
+
+function handleAppEnd(y, x) {
+  if (!isAppDragging) return;
+  isAppDragging = false;
+  if (!app.classList.contains('show') || !lastIcon) return;
+
+  const diffY = appStartY - y;
+  const diffX = Math.abs(appStartX - x);
+
+  if (diffY > 100 && diffX < 50) closeApp();
+}
+
+function closeApp() {
+  if (!lastIcon) return;
+
+  const rect = lastIcon.getBoundingClientRect();
+  app.style.transformOrigin = (rect.left + rect.width/2) + 'px ' + (rect.top + rect.height/2) + 'px';
+
+  app.classList.remove('show');
+  blur.classList.remove('active');
+
+  desktop.classList.remove('app-open');
+  blur.classList.remove('app-open');
+  status.classList.remove('hidden');
+
+  setTimeout(resetAllPages, 450);
+}
+window.closeApp = closeApp;
+
+document.addEventListener('touchstart', e => {
+  if (app.classList.contains('show')) {
+    handleAppStart(e.touches[0].clientY, e.touches[0].clientX);
+  }
+}, { passive: true });
+
+document.addEventListener('touchend', e => {
+  handleAppEnd(e.changedTouches[0].clientY, e.changedTouches[0].clientX);
+});
+
+document.addEventListener('mousedown', e => {
+  if (app.classList.contains('show')) {
+    handleAppStart(e.clientY, e.clientX);
+  }
+});
+
+document.addEventListener('mouseup', e => {
+  handleAppEnd(e.clientY, e.clientX);
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && app.classList.contains('show')) {
+    closeApp();
+  }
+});
+
+if (homeIndicator) {
+  homeIndicator.addEventListener('click', () => {
+    if (app.classList.contains('show')) closeApp();
+  });
+}
+
+// ==================== 开关交互 ====================
+document.querySelectorAll('.item-switch').forEach(switchEl => {
+  switchEl.addEventListener('click', (e) => {
+    e.stopPropagation();
+    switchEl.classList.toggle('active');
+  });
+});
+
+// ==================== 相机交互 ====================
+const viewfinder = document.getElementById('viewfinder');
+const focusBox = document.getElementById('focus-box');
+const gridBtn = document.getElementById('grid-btn');
+const gridLines = document.getElementById('grid-lines');
+const captureBtn = document.getElementById('capture-btn');
+
+if (viewfinder) {
+  viewfinder.addEventListener('click', (e) => {
+    const rect = viewfinder.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    if (focusBox) {
+      focusBox.style.left = (x - 40) + 'px';
+      focusBox.style.top = (y - 40) + 'px';
+      focusBox.classList.remove('show');
+      void focusBox.offsetWidth;
+      focusBox.classList.add('show');
+      setTimeout(() => focusBox.classList.remove('show'), 2000);
+    }
+  });
+}
+
+if (gridBtn && gridLines) {
+  gridBtn.addEventListener('click', () => {
+    gridBtn.classList.toggle('active');
+    gridLines.classList.toggle('show');
+  });
+}
+
+if (captureBtn && viewfinder) {
+  captureBtn.addEventListener('click', () => {
+    viewfinder.style.opacity = '0';
+    setTimeout(() => viewfinder.style.opacity = '1', 100);
+  });
+}
+
+document.querySelectorAll('.camera-mode').forEach(mode => {
+  mode.addEventListener('click', () => {
+    document.querySelectorAll('.camera-mode').forEach(m => m.classList.remove('active'));
+    mode.classList.add('active');
+  });
+});
+
+document.querySelectorAll('.camera-top-btn').forEach(btn => {
+  if (btn.id !== 'grid-btn') {
+    btn.addEventListener('click', () => btn.classList.toggle('active'));
+  }
+});
+
+console.log('%c Source UI 加载完成 ', 'background: #007AFF; color: white; padding: 4px 8px; border-radius: 4px;');
+console.log('解锁方式: 点击/空格键/上滑');
+console.log('退出应用: 点击✕/ESC/小白条/上滑');
+</script>
+</body>
+</html>
