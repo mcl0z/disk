@@ -1,0 +1,839 @@
+using UnityEngine;
+
+[RequireComponent(typeof(Rigidbody), typeof(CapsuleCollider))]
+public class CompleteFPSController : MonoBehaviour
+{
+    [Header("=== 视角设置 ===")]
+    [SerializeField, Range(0.1f, 10f)] private float mouseSensitivity = 2f;
+    [SerializeField, Range(30f, 90f)] private float maxLookAngle = 85f;
+    [SerializeField, Range(40, 120)] private float cameraFOV = 70f;
+    [SerializeField] private bool invertY = false;
+
+    [Header("=== 移动设置 ===")]
+    [SerializeField] private float walkSpeed = 5f;
+    [SerializeField] private float sprintSpeed = 8f;
+    [SerializeField] private float crouchSpeed = 2.5f;
+    [SerializeField] private float jumpForce = 7f; // 调整跳跃力
+    [SerializeField] private float gravityMultiplier = 2.5f; // 增加重力
+    [SerializeField] private float groundDrag = 10f;
+    [SerializeField] private float airControlMultiplier = 0.15f;
+    [SerializeField] private float slopeLimit = 45f;
+
+    [Header("=== 跳跃设置 ===")]
+    [SerializeField] private float maxJumpHeight = 2f; // 最大跳跃高度
+    [SerializeField] private float jumpCooldown = 0.3f; // 跳跃冷却
+    [SerializeField] private float coyoteTime = 0.15f; // 土狼时间（离开地面后仍可跳跃的时间）
+    [SerializeField] private bool enableDoubleJump = false; // 是否允许二段跳
+    [SerializeField] private int maxJumpCount = 2; // 最大跳跃次数
+
+    [Header("=== 下蹲设置 ===")]
+    [SerializeField] private float crouchHeight = 1.5f;
+    [SerializeField] private float standingHeight = 2.5f;
+    [SerializeField] private float crouchTransitionSpeed = 20f;
+
+    [Header("=== 地面检测 ===")]
+    [SerializeField] private LayerMask groundMask = -1;
+    [SerializeField] private float groundCheckRadius = 0.4f;
+    [SerializeField] private float groundCheckDistance = 0.2f; // 添加地面检测距离
+
+    [Header("=== 脚步声系统 ===")]
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip[] footstepSounds;
+    [SerializeField] private AudioClip jumpSound;
+    [SerializeField] private AudioClip landSound;
+    [SerializeField] private float walkStepInterval = 0.5f;
+    [SerializeField] private float sprintStepInterval = 0.3f;
+    [SerializeField] private float crouchStepInterval = 0.8f;
+    [SerializeField, Range(0f, 1f)] private float footstepVolume = 0.7f;
+
+    [Header("=== 聚光灯设置 ===")]
+    [SerializeField] private Light playerLight;
+    [SerializeField] private float lightIntensity = 3f;
+    [SerializeField] private Color lightColor = new Color(1f, 0.95f, 0.9f);
+
+    [Header("=== 动态FOV设置 ===")]
+    [SerializeField] private bool enableDynamicFOV = true;
+    [SerializeField] private float sprintFOV = 75f;
+    [SerializeField] private float fovTransitionSpeed = 10f;
+    [SerializeField] private float zoomFOV = 50f;
+    [SerializeField] private float zoomSpeed = 15f;
+
+    [Header("=== 交互系统 ===")]
+    [SerializeField] private float interactionRange = 2f;
+    [SerializeField] private LayerMask interactionMask = -1;
+
+    [Header("=== 生命值系统 ===")]
+    [SerializeField] private float maxHealth = 100f;
+    [SerializeField] private AudioClip hurtSound;
+    [SerializeField] private AudioClip deathSound;
+
+    [Header("=== 按键设置 ===")]
+    [SerializeField] private KeyCode jumpKey = KeyCode.Space;
+    [SerializeField] private KeyCode sprintKey = KeyCode.LeftShift;
+    [SerializeField] private KeyCode crouchKey = KeyCode.LeftControl;
+    [SerializeField] private KeyCode zoomKey = KeyCode.Mouse1;
+    [SerializeField] private KeyCode lightKey = KeyCode.F;
+    [SerializeField] private KeyCode interactActionKey = KeyCode.E;
+
+    // 组件引用
+    private Camera playerCamera;
+    private Rigidbody rb;
+    private CapsuleCollider capsuleCollider;
+
+    // 移动和视角变量
+    private float xRotation = 0f;
+    private Vector3 moveInput;
+    private bool isGrounded;
+    private bool isOnSlope;
+    private RaycastHit slopeHit;
+    private float slopeAngle;
+
+    // 状态变量
+    private bool isCrouching;
+    private bool isSprinting;
+    private bool isZooming;
+    private bool isMoving;
+    private bool isJumping;
+    private bool isDead;
+    private bool wasGrounded;
+
+    // 跳跃相关变量
+    private int currentJumpCount = 0;
+    private float jumpCooldownTimer = 0f;
+    private float coyoteTimer = 0f;
+    private float timeSinceLastGrounded = 0f;
+
+    // 时间追踪器
+    private float stepTimer;
+    private float healthRegenTimer;
+
+    // 数值变量
+    private float currentSpeed;
+    private float currentHeight;
+    private float currentFOV;
+    private float targetFOV;
+    private float currentHealth;
+
+    // 相机位置
+    private Vector3 cameraOriginalPosition;
+
+    // 交互
+    private Interactable currentInteractable;
+
+    // 输入缓冲
+    private float jumpBufferTime = 0.2f;
+    private float jumpBufferTimer;
+
+    // 事件委托
+    public delegate void HealthChangedDelegate(float currentHealth, float maxHealth);
+    public event HealthChangedDelegate OnHealthChanged;
+
+    public delegate void DeathDelegate();
+    public event DeathDelegate OnDeath;
+
+    void Awake()
+    {
+        InitializeComponents();
+        SetupCamera();
+        InitializeAudio();
+        ResetValues();
+        
+        // 隐藏胶囊体渲染器
+        HideCapsuleRenderer();
+        
+        // 隐藏鼠标
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
+
+    void InitializeComponents()
+    {
+        rb = GetComponent<Rigidbody>();
+        rb.freezeRotation = true;
+        rb.useGravity = false; // 我们将自己控制重力
+
+        capsuleCollider = GetComponent<CapsuleCollider>();
+        capsuleCollider.height = standingHeight;
+        capsuleCollider.center = new Vector3(0, standingHeight / 2, 0);
+        capsuleCollider.radius = 0.3f;
+    }
+
+    void HideCapsuleRenderer()
+    {
+        // 获取或添加MeshRenderer并禁用它
+        MeshRenderer renderer = GetComponent<MeshRenderer>();
+        if (renderer != null)
+        {
+            renderer.enabled = false;
+        }
+        
+        // 或者，如果有其他渲染器也一并禁用
+        foreach (var rendererComponent in GetComponentsInChildren<Renderer>())
+        {
+            // 跳过摄像机和灯光
+            if (!(rendererComponent is Camera) && !(rendererComponent is Light))
+            {
+                rendererComponent.enabled = false;
+            }
+        }
+    }
+
+    void SetupCamera()
+    {
+        // 创建相机
+        GameObject cameraObj = new GameObject("PlayerCamera");
+        cameraObj.transform.SetParent(transform);
+        
+        // 相机高度设置为2.5米（眼睛位置，稍低于头顶）
+        float cameraHeight = standingHeight * 0.9f;
+        cameraObj.transform.localPosition = new Vector3(0, cameraHeight, 0);
+        cameraObj.transform.localRotation = Quaternion.identity;
+
+        playerCamera = cameraObj.AddComponent<Camera>();
+        playerCamera.tag = "MainCamera";
+        playerCamera.nearClipPlane = 0.01f;
+        playerCamera.fieldOfView = cameraFOV;
+
+        cameraOriginalPosition = cameraObj.transform.localPosition;
+
+        // 创建聚光灯
+        if (playerLight == null)
+        {
+            CreateSpotlight(cameraObj.transform);
+        }
+    }
+
+    void CreateSpotlight(Transform parent)
+    {
+        GameObject lightObj = new GameObject("PlayerSpotLight");
+        lightObj.transform.SetParent(parent);
+        lightObj.transform.localPosition = new Vector3(0, -0.05f, 0.1f);
+        lightObj.transform.localRotation = Quaternion.Euler(5, 0, 0);
+
+        playerLight = lightObj.AddComponent<Light>();
+        playerLight.type = LightType.Spot;
+        playerLight.spotAngle = 60f;
+        playerLight.range = 20f;
+        playerLight.intensity = lightIntensity;
+        playerLight.color = lightColor;
+        playerLight.shadows = LightShadows.Soft;
+        playerLight.enabled = true;
+    }
+
+    void InitializeAudio()
+    {
+        // 脚步声源
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+            audioSource.spatialBlend = 1f;
+            audioSource.rolloffMode = AudioRolloffMode.Logarithmic;
+            audioSource.maxDistance = 15f;
+        }
+    }
+
+    void ResetValues()
+    {
+        currentHeight = standingHeight;
+        currentSpeed = walkSpeed;
+        currentFOV = cameraFOV;
+        targetFOV = cameraFOV;
+        currentHealth = maxHealth;
+        currentJumpCount = 0;
+    }
+
+    void Update()
+    {
+        if (isDead) return;
+
+        // ESC切换鼠标
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            ToggleCursor();
+        }
+
+        HandleMouseLook();
+        CheckGround();
+        CheckSlope();
+        HandleInput();
+        HandleCrouch();
+        HandleZoom();
+        UpdateFOV();
+        UpdateInteractions();
+        UpdateTimers();
+        UpdateJumpState();
+    }
+
+    void FixedUpdate()
+    {
+        if (isDead) return;
+
+        ApplyGravity();
+        MovePlayer();
+        SpeedControl();
+        LimitVerticalVelocity();
+    }
+
+    void HandleMouseLook()
+    {
+        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * 100f * Time.deltaTime;
+        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * 100f * Time.deltaTime;
+
+        // Y轴反转处理
+        if (!invertY) mouseY = -mouseY;
+
+        // 水平旋转（身体）
+        transform.Rotate(Vector3.up * mouseX);
+
+        // 垂直旋转（相机）
+        xRotation += mouseY;
+        xRotation = Mathf.Clamp(xRotation, -maxLookAngle, maxLookAngle);
+
+        if (playerCamera != null)
+        {
+            playerCamera.transform.localRotation = Quaternion.Euler(xRotation, 0, 0);
+        }
+    }
+
+    void HandleInput()
+    {
+        // 基础移动输入
+        float horizontal = Input.GetAxisRaw("Horizontal");
+        float vertical = Input.GetAxisRaw("Vertical");
+        moveInput = new Vector3(horizontal, 0, vertical).normalized;
+
+        isMoving = moveInput.magnitude > 0.1f;
+
+        // 冲刺
+        bool wantsToSprint = Input.GetKey(sprintKey) && isMoving && !isCrouching && !isZooming;
+
+        if (wantsToSprint)
+        {
+            isSprinting = true;
+        }
+        else
+        {
+            isSprinting = false;
+        }
+
+        // 下蹲
+        isCrouching = Input.GetKey(crouchKey);
+
+        // 计算速度
+        if (isCrouching)
+        {
+            currentSpeed = crouchSpeed;
+        }
+        else if (isSprinting)
+        {
+            currentSpeed = sprintSpeed;
+        }
+        else
+        {
+            currentSpeed = walkSpeed;
+        }
+
+        // 跳跃缓冲
+        if (Input.GetKeyDown(jumpKey))
+        {
+            jumpBufferTimer = jumpBufferTime;
+        }
+        else
+        {
+            jumpBufferTimer -= Time.deltaTime;
+        }
+
+        // 执行跳跃
+        if (jumpBufferTimer > 0 && CanJump())
+        {
+            Jump();
+            jumpBufferTimer = 0;
+        }
+
+        // 开关灯光
+        if (Input.GetKeyDown(lightKey))
+        {
+            ToggleLight();
+        }
+
+        // 交互
+        if (Input.GetKeyDown(interactActionKey) && currentInteractable != null)
+        {
+            currentInteractable.Interact(this);
+        }
+    }
+
+    bool CanJump()
+    {
+        // 冷却检查
+        if (jumpCooldownTimer > 0) return false;
+        
+        // 下蹲时不能跳跃
+        if (isCrouching) return false;
+        
+        // 如果在地面或土狼时间内
+        if (isGrounded || coyoteTimer > 0)
+        {
+            return true;
+        }
+        
+        // 二段跳检查
+        if (enableDoubleJump && currentJumpCount < maxJumpCount)
+        {
+            return true;
+        }
+        
+        return false;
+    }
+
+    void UpdateJumpState()
+    {
+        // 更新土狼时间
+        if (isGrounded)
+        {
+            coyoteTimer = coyoteTime;
+            wasGrounded = true;
+        }
+        else
+        {
+            coyoteTimer -= Time.deltaTime;
+            
+            // 记录离开地面的时间
+            if (wasGrounded)
+            {
+                timeSinceLastGrounded = 0f;
+                wasGrounded = false;
+            }
+            else
+            {
+                timeSinceLastGrounded += Time.deltaTime;
+            }
+        }
+        
+        // 更新跳跃冷却
+        if (jumpCooldownTimer > 0)
+        {
+            jumpCooldownTimer -= Time.deltaTime;
+        }
+        
+        // 重置跳跃计数
+        if (isGrounded && rb.velocity.y <= 0.1f)
+        {
+            currentJumpCount = 0;
+            isJumping = false;
+        }
+    }
+
+    void HandleCrouch()
+    {
+        float targetHeight = isCrouching ? crouchHeight : standingHeight;
+        currentHeight = Mathf.Lerp(currentHeight, targetHeight, crouchTransitionSpeed * Time.deltaTime);
+
+        capsuleCollider.height = currentHeight;
+        capsuleCollider.center = new Vector3(0, currentHeight / 2, 0);
+
+        // 调整相机高度，保持相机在眼睛位置（头顶的90%高度）
+        if (playerCamera != null)
+        {
+            Vector3 targetCameraPos = cameraOriginalPosition;
+            targetCameraPos.y = currentHeight * 0.9f;
+            playerCamera.transform.localPosition = Vector3.Lerp(
+                playerCamera.transform.localPosition,
+                targetCameraPos,
+                crouchTransitionSpeed * Time.deltaTime
+            );
+        }
+    }
+
+    void HandleZoom()
+    {
+        isZooming = Input.GetKey(zoomKey);
+
+        if (isZooming)
+        {
+            targetFOV = Mathf.Lerp(targetFOV, zoomFOV, zoomSpeed * Time.deltaTime);
+        }
+        else if (enableDynamicFOV && isSprinting)
+        {
+            targetFOV = Mathf.Lerp(targetFOV, sprintFOV, fovTransitionSpeed * Time.deltaTime);
+        }
+        else
+        {
+            targetFOV = Mathf.Lerp(targetFOV, cameraFOV, fovTransitionSpeed * Time.deltaTime);
+        }
+    }
+
+    void UpdateFOV()
+    {
+        currentFOV = Mathf.Lerp(currentFOV, targetFOV, fovTransitionSpeed * Time.deltaTime);
+
+        if (playerCamera != null)
+        {
+            playerCamera.fieldOfView = currentFOV;
+        }
+    }
+
+    void CheckGround()
+    {
+        // 更准确的地面检测
+        Vector3 capsuleBottom = transform.position + Vector3.up * capsuleCollider.radius;
+        Vector3 capsuleTop = transform.position + Vector3.up * (currentHeight - capsuleCollider.radius);
+        
+        // 使用胶囊体投射进行更准确的地面检测
+        isGrounded = Physics.CapsuleCast(
+            capsuleBottom,
+            capsuleTop,
+            capsuleCollider.radius * 0.9f, // 稍微缩小半径避免边缘检测
+            Vector3.down,
+            out RaycastHit hit,
+            groundCheckDistance,
+            groundMask
+        );
+    }
+
+    void CheckSlope()
+    {
+        if (Physics.Raycast(transform.position, Vector3.down, out slopeHit, 2f, groundMask))
+        {
+            slopeAngle = Vector3.Angle(Vector3.up, slopeHit.normal);
+            isOnSlope = slopeAngle <= slopeLimit && slopeAngle > 0;
+        }
+        else
+        {
+            isOnSlope = false;
+        }
+    }
+
+    void ApplyGravity()
+    {
+        if (!isGrounded)
+        {
+            Vector3 gravity = Physics.gravity * gravityMultiplier;
+            rb.AddForce(gravity, ForceMode.Acceleration);
+        }
+    }
+
+    void MovePlayer()
+    {
+        if (moveInput.magnitude < 0.1f) return;
+
+        // 计算移动方向
+        Vector3 moveDirection = transform.TransformDirection(moveInput);
+
+        // 斜坡处理
+        if (isOnSlope && !isJumping && isGrounded)
+        {
+            moveDirection = Vector3.ProjectOnPlane(moveDirection, slopeHit.normal).normalized;
+        }
+
+        // 应用移动力
+        float speedMultiplier = isGrounded ? 1f : airControlMultiplier;
+        Vector3 moveForce = moveDirection * currentSpeed * 10f * speedMultiplier;
+
+        rb.AddForce(moveForce, ForceMode.Force);
+
+        // 脚步声
+        if (isGrounded && isMoving && !isJumping)
+        {
+            stepTimer -= Time.deltaTime;
+
+            if (stepTimer <= 0)
+            {
+                PlayFootstep();
+
+                float interval = isCrouching ? crouchStepInterval :
+                               isSprinting ? sprintStepInterval : walkStepInterval;
+                stepTimer = interval;
+            }
+        }
+    }
+
+    void SpeedControl()
+    {
+        Vector3 flatVel = new Vector3(rb.velocity.x, 0, rb.velocity.z);
+
+        if (flatVel.magnitude > currentSpeed)
+        {
+            Vector3 limitedVel = flatVel.normalized * currentSpeed;
+            rb.velocity = new Vector3(limitedVel.x, rb.velocity.y, limitedVel.z);
+        }
+
+        // 地面阻力
+        if (isGrounded && !isMoving && !isJumping)
+        {
+            rb.velocity = Vector3.Lerp(rb.velocity, Vector3.zero, groundDrag * Time.deltaTime);
+        }
+    }
+
+    void LimitVerticalVelocity()
+    {
+        // 限制最大下落速度，避免跳得太高
+        float maxFallSpeed = -25f; // 最大下落速度
+        float maxRiseSpeed = 15f; // 最大上升速度
+        
+        if (rb.velocity.y < maxFallSpeed)
+        {
+            rb.velocity = new Vector3(rb.velocity.x, maxFallSpeed, rb.velocity.z);
+        }
+        
+        if (rb.velocity.y > maxRiseSpeed)
+        {
+            rb.velocity = new Vector3(rb.velocity.x, maxRiseSpeed, rb.velocity.z);
+        }
+    }
+
+    void Jump()
+    {
+        // 计算跳跃力以达到期望高度
+        float calculatedJumpForce = Mathf.Sqrt(2f * Mathf.Abs(Physics.gravity.y * gravityMultiplier) * maxJumpHeight);
+        
+        // 重置垂直速度（避免叠加速度）
+        rb.velocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
+        
+        // 应用跳跃力
+        rb.AddForce(Vector3.up * calculatedJumpForce, ForceMode.VelocityChange);
+
+        // 更新状态
+        currentJumpCount++;
+        isJumping = true;
+        jumpCooldownTimer = jumpCooldown;
+        coyoteTimer = 0f; // 重置土狼时间
+
+        // 播放跳跃音效
+        if (jumpSound != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(jumpSound, 0.7f);
+        }
+    }
+
+    void PlayFootstep()
+    {
+        if (footstepSounds == null || footstepSounds.Length == 0 || audioSource == null) return;
+
+        AudioClip clip = footstepSounds[Random.Range(0, footstepSounds.Length)];
+        float volume = footstepVolume * (isCrouching ? 0.3f : isSprinting ? 1f : 0.7f);
+
+        audioSource.PlayOneShot(clip, volume);
+    }
+
+    void UpdateInteractions()
+    {
+        if (playerCamera == null) return;
+
+        Ray ray = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
+        RaycastHit hit;
+
+        if (Physics.Raycast(ray, out hit, interactionRange, interactionMask))
+        {
+            Interactable interactable = hit.collider.GetComponent<Interactable>();
+
+            if (interactable != null && interactable != currentInteractable)
+            {
+                currentInteractable = interactable;
+                currentInteractable.OnHoverEnter();
+            }
+        }
+        else if (currentInteractable != null)
+        {
+            currentInteractable.OnHoverExit();
+            currentInteractable = null;
+        }
+    }
+
+    void UpdateTimers()
+    {
+        // 落地检测
+        if (!isGrounded && rb.velocity.y < -2f)
+        {
+            StartCoroutine(CheckLanding());
+        }
+    }
+
+    System.Collections.IEnumerator CheckLanding()
+    {
+        float startY = transform.position.y;
+        yield return new WaitUntil(() => isGrounded || transform.position.y > startY);
+
+        if (isGrounded && landSound != null && audioSource != null)
+        {
+            float fallDistance = startY - transform.position.y;
+            if (fallDistance > 1f)
+            {
+                audioSource.PlayOneShot(landSound, Mathf.Clamp(fallDistance / 5f, 0.3f, 1f));
+            }
+        }
+    }
+
+    void ToggleLight()
+    {
+        if (playerLight == null) return;
+        playerLight.enabled = !playerLight.enabled;
+    }
+
+    public void TakeDamage(float damage, Vector3? direction = null)
+    {
+        if (isDead) return;
+
+        currentHealth -= damage;
+
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
+
+        // 播放受伤音效
+        if (hurtSound != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(hurtSound, 0.8f);
+        }
+
+        // 可选：受伤时的轻微震动
+        if (direction.HasValue)
+        {
+            Vector3 knockback = direction.Value.normalized * damage * 0.5f;
+            rb.AddForce(knockback, ForceMode.Impulse);
+        }
+
+        if (currentHealth <= 0)
+        {
+            Die();
+        }
+    }
+
+    void Die()
+    {
+        isDead = true;
+        rb.constraints = RigidbodyConstraints.None;
+
+        // 播放死亡音效
+        if (deathSound != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(deathSound, 1f);
+        }
+
+        OnDeath?.Invoke();
+
+        // 死亡后3秒禁用控制
+        Invoke(nameof(DisableController), 3f);
+    }
+
+    void DisableController()
+    {
+        this.enabled = false;
+    }
+
+    void ToggleCursor()
+    {
+        if (Cursor.lockState == CursorLockMode.Locked)
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+        else
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
+    }
+
+    // 公共方法
+    public void Heal(float amount)
+    {
+        currentHealth = Mathf.Clamp(currentHealth + amount, 0, maxHealth);
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
+    }
+
+    public void SetFOV(float fov)
+    {
+        cameraFOV = Mathf.Clamp(fov, 40f, 120f);
+        targetFOV = cameraFOV;
+    }
+
+    public void SetMouseSensitivity(float sensitivity)
+    {
+        mouseSensitivity = Mathf.Clamp(sensitivity, 0.1f, 10f);
+    }
+
+    // 跳跃相关设置
+    public void SetJumpHeight(float height)
+    {
+        maxJumpHeight = Mathf.Clamp(height, 0.5f, 10f);
+    }
+    
+    public void EnableDoubleJump(bool enable)
+    {
+        enableDoubleJump = enable;
+    }
+
+    // 属性访问器
+    public bool IsGrounded => isGrounded;
+    public bool IsCrouching => isCrouching;
+    public bool IsSprinting => isSprinting;
+    public bool IsZooming => isZooming;
+    public bool IsMoving => isMoving;
+    public bool IsJumping => isJumping;
+    public bool IsDead => isDead;
+    public float CurrentHealth => currentHealth;
+    public float MaxHealth => maxHealth;
+    public float CurrentFOV => currentFOV;
+    public bool IsLightOn => playerLight != null && playerLight.enabled;
+
+    // 调试绘制
+    void OnDrawGizmosSelected()
+    {
+        if (!Application.isPlaying) return;
+
+        // 地面检测范围
+        Gizmos.color = isGrounded ? Color.green : Color.red;
+        Vector3 capsuleBottom = transform.position + Vector3.up * capsuleCollider.radius;
+        Vector3 capsuleTop = transform.position + Vector3.up * (currentHeight - capsuleCollider.radius);
+        Gizmos.DrawWireSphere(capsuleBottom, capsuleCollider.radius * 0.9f);
+        Gizmos.DrawWireSphere(capsuleTop, capsuleCollider.radius * 0.9f);
+        
+        // 地面检测线
+        Gizmos.DrawLine(capsuleBottom - Vector3.up * groundCheckDistance, capsuleBottom);
+
+        // 交互范围
+        if (playerCamera != null)
+        {
+            Gizmos.color = Color.yellow;
+            Vector3 rayStart = playerCamera.transform.position;
+            Vector3 rayEnd = rayStart + playerCamera.transform.forward * interactionRange;
+            Gizmos.DrawLine(rayStart, rayEnd);
+        }
+    }
+}
+
+// 交互接口
+public interface Interactable
+{
+    void Interact(CompleteFPSController player);
+    void OnHoverEnter();
+    void OnHoverExit();
+}
+
+// 示例交互类
+public class BasicInteractable : MonoBehaviour, Interactable
+{
+    [SerializeField] private string interactionText = "按E互动";
+    [SerializeField] private AudioClip interactionSound;
+
+    public void Interact(CompleteFPSController player)
+    {
+        Debug.Log($"与 {gameObject.name} 互动");
+
+        if (interactionSound != null)
+        {
+            AudioSource.PlayClipAtPoint(interactionSound, transform.position);
+        }
+
+        // 这里可以添加具体的交互逻辑
+    }
+
+    public void OnHoverEnter()
+    {
+        Debug.Log($"准备互动: {interactionText}");
+    }
+
+    public void OnHoverExit()
+    {
+        Debug.Log("退出互动范围");
+    }
+}
