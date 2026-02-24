@@ -1,0 +1,2150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>NebulaOS - Liquid Glass</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            -webkit-tap-highlight-color: transparent;
+            touch-action: none;
+            user-select: none;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow: hidden;
+            background: #000;
+            touch-action: none;
+        }
+        
+        /* 硬件加速层 */
+        .gpu-layer {
+            transform: translateZ(0);
+            will-change: transform, opacity, filter;
+            backface-visibility: hidden;
+            perspective: 1000px;
+        }
+        
+        /* 液态玻璃效果 - 动态折射 */
+        .liquid-glass {
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.15) 0%, 
+                rgba(255, 255, 255, 0.05) 50%,
+                rgba(255, 255, 255, 0.1) 100%);
+            backdrop-filter: blur(40px) saturate(200%) brightness(1.1);
+            -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(1.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3),
+                inset 0 -1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .liquid-glass::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 60%);
+            opacity: 0.5;
+            pointer-events: none;
+            animation: shimmer 8s infinite linear;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 深度高斯模糊层级 */
+        .blur-deep {
+            backdrop-filter: blur(60px) saturate(180%);
+            -webkit-backdrop-filter: blur(60px) saturate(180%);
+        }
+        
+        .blur-medium {
+            backdrop-filter: blur(30px) saturate(150%);
+            -webkit-backdrop-filter: blur(30px) saturate(150%);
+        }
+        
+        .blur-light {
+            backdrop-filter: blur(15px) saturate(120%);
+            -webkit-backdrop-filter: blur(15px) saturate(120%);
+        }
+        
+        /* 动态 Island - 液态变形 */
+        .dynamic-island {
+            transition: none; /* 由JS控制动画 */
+            background: #000;
+            box-shadow: 
+                0 0 0 1px rgba(255,255,255,0.1),
+                0 4px 20px rgba(0,0,0,0.5);
+        }
+        
+        .island-content {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        
+        .island-expanded .island-content {
+            opacity: 1;
+        }
+        
+        /* 手势跟随层 */
+        .gesture-follow {
+            transition: none !important;
+        }
+        
+        .gesture-spring {
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                        opacity 0.3s ease,
+                        filter 0.3s ease !important;
+        }
+        
+        /* 负一屏 */
+        .minus-one-screen {
+            transform: translateX(-100%);
+        }
+        
+        /* 页面层级管理 */
+        .layer-home { z-index: 10; }
+        .layer-apps { z-index: 20; }
+        .layer-multitask { z-index: 30; }
+        .layer-control { z-index: 40; }
+        .layer-island { z-index: 50; }
+        .layer-status { z-index: 60; }
+        
+        /* 应用图标 - 液态悬浮 */
+        .app-icon {
+            transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .app-icon:active {
+            transform: scale(0.88);
+            transition: transform 0.05s ease;
+        }
+        
+        .app-icon:hover {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+        
+        /* 多任务卡片 - 3D堆叠 */
+        .task-card {
+            transform-style: preserve-3d;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .task-card.active {
+            transform: scale(1.05) translateZ(20px);
+        }
+        
+        /* 下拉刷新/状态栏 */
+        .pull-indicator {
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+        
+        /* 滚动容器 */
+        .scroll-container {
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        
+        .scroll-container::-webkit-scrollbar {
+            display: none;
+        }
+        
+        /* 通知 */
+        .notification-toast {
+            animation: slideInTop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        @keyframes slideInTop {
+            from { transform: translateY(-100px) scale(0.9); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        
+        /* 充电波纹 */
+        @keyframes chargePulse {
+            0%, 100% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.1); opacity: 0.3; }
+        }
+        
+        .charging-effect {
+            animation: chargePulse 2s infinite;
+        }
+        
+        /* 键盘 */
+        .keyboard-key {
+            transition: all 0.1s ease;
+        }
+        
+        .keyboard-key:active {
+            transform: scale(0.95);
+            background: rgba(255,255,255,0.4);
+        }
+        
+        /* 消息气泡 */
+        .message-bubble {
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+        
+        /* 浏览器地址栏 */
+        .address-bar:focus-within {
+            transform: scale(1.02);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        
+        /* 设置开关 */
+        .toggle-switch {
+            transition: background-color 0.3s ease;
+        }
+        
+        .toggle-switch::after {
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .toggle-active::after {
+            transform: translateX(24px);
+        }
+        
+        /* 计算器按钮 */
+        .calc-btn {
+            transition: all 0.15s ease;
+        }
+        
+        .calc-btn:active {
+            transform: scale(0.9);
+            filter: brightness(1.2);
+        }
+        
+        /* 音乐波形 */
+        @keyframes wave {
+            0%, 100% { height: 20%; }
+            50% { height: 100%; }
+        }
+        
+        .music-wave {
+            animation: wave 1s ease-in-out infinite;
+        }
+        
+        /* 天气动画 */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .weather-icon {
+            animation: float 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="bg-black text-white antialiased">
+
+    <!-- 主容器 -->
+    <div id="os-container" class="relative w-full h-screen max-w-md mx-auto overflow-hidden bg-black shadow-2xl">
+        
+        <!-- 动态壁纸层 - 视差响应 -->
+        <div id="wallpaper-layer" class="absolute inset-0 gpu-layer">
+            <div class="absolute inset-0 bg-gradient-to-br from-indigo-900 via-purple-900 to-black"></div>
+            <div class="absolute inset-0 opacity-30">
+                <div class="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500 rounded-full blur-3xl animate-pulse"></div>
+                <div class="absolute bottom-1/3 right-1/4 w-80 h-80 bg-purple-500 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
+                <div class="absolute top-1/2 left-1/2 w-48 h-48 bg-pink-500 rounded-full blur-3xl animate-pulse" style="animation-delay: 2s;"></div>
+            </div>
+            <!-- 液态光效 -->
+            <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noise"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%" height="100%" filter="url(%23noise)" opacity="0.05"/%3E%3C/svg%3E')] opacity-20"></div>
+        </div>
+
+        <!-- 负一屏 (Today View) -->
+        <div id="minus-one" class="absolute inset-0 gpu-layer minus-one-screen layer-home bg-black/80 blur-deep">
+            <div class="pt-14 pb-8 px-6 h-full scroll-container">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">今天</h2>
+                    <span class="text-sm text-gray-400" id="minus-date">10月24日 星期四</span>
+                </div>
+                
+                <!-- 搜索 -->
+                <div class="liquid-glass rounded-2xl p-4 mb-6 flex items-center gap-3 cursor-pointer" onclick="openApp('search')">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    <span class="text-gray-400">搜索</span>
+                </div>
+
+                <!-- 小组件网格 -->
+                <div class="space-y-4">
+                    <!-- 天气小组件 - 大 -->
+                    <div class="liquid-glass rounded-3xl p-5 relative overflow-hidden" onclick="openApp('weather')">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="text-sm text-gray-300 mb-1">北京</div>
+                                <div class="text-6xl font-light">24°</div>
+                                <div class="text-sm mt-2 text-gray-300">多云 · 空气质量 优</div>
+                            </div>
+                            <div class="weather-icon">
+                                <svg class="w-16 h-16 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                            </div>
+                        </div>
+                        <div class="flex justify-between mt-6 text-sm">
+                            <div class="text-center"><div class="text-gray-400">现在</div><div>24°</div></div>
+                            <div class="text-center"><div class="text-gray-400">14时</div><div>26°</div></div>
+                            <div class="text-center"><div class="text-gray-400">15时</div><div>25°</div></div>
+                            <div class="text-center"><div class="text-gray-400">16时</div><div>23°</div></div>
+                        </div>
+                    </div>
+
+                    <!-- 电池小组件 -->
+                    <div class="liquid-glass rounded-3xl p-5 flex items-center justify-between" onclick="openApp('battery')">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            </div>
+                            <div>
+                                <div class="font-medium">电池电量</div>
+                                <div class="text-sm text-green-400">87% · 预计可用 12 小时</div>
+                            </div>
+                        </div>
+                        <div class="w-16 h-8 bg-gray-800 rounded-full relative overflow-hidden">
+                            <div class="absolute inset-y-0 left-0 bg-green-500 rounded-full transition-all duration-1000" style="width: 87%"></div>
+                        </div>
+                    </div>
+
+                    <!-- 日程小组件 -->
+                    <div class="liquid-glass rounded-3xl p-5" onclick="openApp('calendar')">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center text-sm font-bold">24</div>
+                            <div class="text-sm font-medium">今天的日程</div>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-3 text-sm">
+                                <div class="w-1 h-8 bg-blue-500 rounded-full"></div>
+                                <div class="flex-1">
+                                    <div class="font-medium">团队会议</div>
+                                    <div class="text-xs text-gray-400">14:00 - 15:30</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 text-sm">
+                                <div class="w-1 h-8 bg-purple-500 rounded-full"></div>
+                                <div class="flex-1">
+                                    <div class="font-medium">项目评审</div>
+                                    <div class="text-xs text-gray-400">16:00 - 17:00</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 快捷指令 -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="liquid-glass rounded-2xl p-4 flex items-center gap-3 cursor-pointer active:scale-95 transition-transform" onclick="toggleFlashlight()">
+                            <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center" id="flashlight-icon">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            </div>
+                            <span class="text-sm">手电筒</span>
+                        </div>
+                        <div class="liquid-glass rounded-2xl p-4 flex items-center gap-3 cursor-pointer active:scale-95 transition-transform" onclick="openApp('calculator')">
+                            <div class="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                            </div>
+                            <span class="text-sm">计算器</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主屏幕 -->
+        <div id="home-screen" class="absolute inset-0 gpu-layer layer-home pt-12 pb-24 px-6">
+            <!-- 状态栏 -->
+            <div id="status-bar" class="absolute top-0 left-0 right-0 h-12 flex justify-between items-end px-8 pb-2 text-sm font-semibold z-50 cursor-pointer" ontouchstart="handleStatusPullStart(event)" ontouchmove="handleStatusPullMove(event)" ontouchend="handleStatusPullEnd(event)">
+                <div id="status-time" class="tabular-nums">09:41</div>
+                <div class="flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+                    <div class="w-6 h-3 border border-white/80 rounded-sm relative">
+                        <div id="battery-fill" class="absolute inset-0.5 bg-white rounded-sm" style="width: 85%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 动态 Island -->
+            <div id="dynamic-island" class="absolute top-3 left-1/2 -translate-x-1/2 h-10 bg-black rounded-full dynamic-island layer-island flex items-center justify-center cursor-pointer overflow-hidden" style="width: 120px;" onclick="toggleIsland()">
+                <div class="island-content flex items-center gap-3 px-4 w-full">
+                    <div class="flex items-center gap-2 flex-1">
+                        <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                        <span class="text-xs font-medium text-white/90">正在录音</span>
+                    </div>
+                    <div class="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 overflow-hidden">
+                        <div class="w-full h-full bg-gray-600"></div>
+                    </div>
+                </div>
+                <!--  Island 展开内容 -->
+                <div id="island-expanded-content" class="absolute inset-0 hidden flex-col p-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-sm font-medium">实时活动</span>
+                        <button onclick="event.stopPropagation(); toggleIsland()" class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+                    <div class="flex-1 flex items-center justify-center gap-4">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold">12:34</div>
+                            <div class="text-xs text-gray-400">计时器</div>
+                        </div>
+                        <div class="w-px h-12 bg-white/20"></div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold">87%</div>
+                            <div class="text-xs text-gray-400">电量</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 小组件区域 -->
+            <div class="grid grid-cols-2 gap-4 mb-8 mt-8">
+                <div class="liquid-glass rounded-3xl p-4 h-36 cursor-pointer active:scale-95 transition-transform" onclick="openApp('weather')">
+                    <div class="flex justify-between items-start h-full flex-col">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-yellow-400 weather-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                            <span class="text-xs text-white/70">天气</span>
+                        </div>
+                        <div>
+                            <div class="text-4xl font-light">24°</div>
+                            <div class="text-xs text-white/60 mt-1">多云 · 最高28°</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="liquid-glass rounded-3xl p-4 h-36 cursor-pointer active:scale-95 transition-transform" onclick="openApp('battery')">
+                    <div class="flex flex-col justify-between h-full">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            <span class="text-xs text-white/70">电池</span>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="text-3xl font-light">87%</div>
+                            <div class="w-full h-2 bg-white/20 rounded-full overflow-hidden">
+                                <div class="h-full bg-green-400 rounded-full charging-effect" style="width: 87%"></div>
+                            </div>
+                            <div class="text-xs text-green-400">正在充电</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 应用网格 -->
+            <div class="grid grid-cols-4 gap-x-4 gap-y-6 px-1" id="app-grid">
+                <!-- 应用由JS生成 -->
+            </div>
+
+            <!-- Dock -->
+            <div class="absolute bottom-8 left-4 right-4 liquid-glass rounded-3xl p-4 flex justify-around items-center backdrop-blur-xl">
+                <div class="app-icon w-14 h-14 bg-green-500 rounded-2xl flex items-center justify-center cursor-pointer shadow-lg" onclick="openApp('phone')">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                </div>
+                <div class="app-icon w-14 h-14 bg-blue-500 rounded-2xl flex items-center justify-center cursor-pointer shadow-lg" onclick="openApp('browser')">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+                </div>
+                <div class="app-icon w-14 h-14 bg-white rounded-2xl flex items-center justify-center cursor-pointer shadow-lg" onclick="openApp('messages')">
+                    <svg class="w-7 h-7 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                </div>
+                <div class="app-icon w-14 h-14 bg-gradient-to-br from-pink-500 to-orange-500 rounded-2xl flex items-center justify-center cursor-pointer shadow-lg" onclick="openApp('music')">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- 应用层 -->
+        <div id="app-layer" class="absolute inset-0 gpu-layer layer-apps translate-y-full gesture-follow">
+            <div id="app-content" class="h-full w-full bg-black"></div>
+            <!-- 应用内手势条 -->
+            <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1 bg-white/30 rounded-full pointer-events-none"></div>
+        </div>
+
+        <!-- 多任务层 -->
+        <div id="multitask-layer" class="absolute inset-0 gpu-layer layer-multitask translate-y-full gesture-follow bg-black/95 backdrop-blur-xl hidden">
+            <div class="pt-12 px-6 h-full flex flex-col">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">多任务</h2>
+                    <button onclick="closeAllTasks()" class="text-sm text-red-400 font-medium">关闭全部</button>
+                </div>
+                <div id="task-list" class="flex-1 overflow-y-auto space-y-4 pb-24 scroll-container">
+                    <!-- 任务卡片 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 控制中心 -->
+        <div id="control-center" class="absolute inset-0 gpu-layer layer-control pointer-events-none">
+            <div id="control-backdrop" class="absolute inset-0 bg-black/0 transition-colors duration-300 pointer-events-auto" onclick="closeControlCenter()"></div>
+            <div id="control-panel" class="absolute top-0 left-0 right-0 bg-gray-900/90 backdrop-blur-2xl rounded-b-3xl transform -translate-y-full gesture-follow pointer-events-auto transition-shadow duration-300" style="box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
+                <div class="pt-12 pb-8 px-6">
+                    <!-- 拖动指示器 -->
+                    <div class="flex justify-center mb-6">
+                        <div class="w-10 h-1 bg-white/30 rounded-full"></div>
+                    </div>
+
+                    <!-- 快捷开关网格 -->
+                    <div class="grid grid-cols-4 gap-3 mb-6">
+                        <div class="aspect-square liquid-glass rounded-2xl flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-90 transition-transform" onclick="toggleControlSwitch(this, 'airplane')">
+                            <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center switch-bg transition-colors duration-300">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                            </div>
+                            <span class="text-[10px]">飞行模式</span>
+                        </div>
+                        <div class="aspect-square liquid-glass rounded-2xl flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-90 transition-transform" onclick="toggleControlSwitch(this, 'wifi')">
+                            <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center switch-bg transition-colors duration-300">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path></svg>
+                            </div>
+                            <span class="text-[10px]">Wi-Fi</span>
+                        </div>
+                        <div class="aspect-square liquid-glass rounded-2xl flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-90 transition-transform" onclick="toggleControlSwitch(this, 'bluetooth')">
+                            <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center switch-bg transition-colors duration-300">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                            </div>
+                            <span class="text-[10px]">蓝牙</span>
+                        </div>
+                        <div class="aspect-square liquid-glass rounded-2xl flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-90 transition-transform" onclick="toggleControlSwitch(this, 'cellular')">
+                            <div class="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center switch-bg transition-colors duration-300">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            </div>
+                            <span class="text-[10px]">蜂窝数据</span>
+                        </div>
+                    </div>
+
+                    <!-- 滑块控制 -->
+                    <div class="space-y-4 mb-6">
+                        <div class="liquid-glass rounded-2xl p-4">
+                            <div class="flex items-center gap-3 mb-2">
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                                <span class="text-sm font-medium">亮度</span>
+                                <span class="text-xs text-gray-400 ml-auto" id="brightness-value">70%</span>
+                            </div>
+                            <div class="h-10 bg-black/30 rounded-xl relative overflow-hidden cursor-pointer touch-none" ontouchstart="handleSliderStart(event, 'brightness')" ontouchmove="handleSliderMove(event, 'brightness')" ontouchend="handleSliderEnd(event)">
+                                <div id="brightness-fill" class="absolute inset-y-0 left-0 bg-white/90 rounded-xl" style="width: 70%"></div>
+                                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                    <div class="w-8 h-8 bg-white rounded-full shadow-lg absolute" id="brightness-thumb" style="left: 70%; transform: translateX(-50%)"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="liquid-glass rounded-2xl p-4">
+                            <div class="flex items-center gap-3 mb-2">
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
+                                <span class="text-sm font-medium">音量</span>
+                                <span class="text-xs text-gray-400 ml-auto" id="volume-value">50%</span>
+                            </div>
+                            <div class="h-10 bg-black/30 rounded-xl relative overflow-hidden cursor-pointer touch-none" ontouchstart="handleSliderStart(event, 'volume')" ontouchmove="handleSliderMove(event, 'volume')" ontouchend="handleSliderEnd(event)">
+                                <div id="volume-fill" class="absolute inset-y-0 left-0 bg-white/90 rounded-xl" style="width: 50%"></div>
+                                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                    <div class="w-8 h-8 bg-white rounded-full shadow-lg absolute" id="volume-thumb" style="left: 50%; transform: translateX(-50%)"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 媒体控制 -->
+                    <div class="liquid-glass rounded-2xl p-4 flex items-center gap-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-pink-500 to-purple-600 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-medium truncate">夜曲</div>
+                            <div class="text-sm text-gray-400 truncate">周杰伦</div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button class="w-8 h-8 flex items-center justify-center" onclick="prevTrack()">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"></path></svg>
+                            </button>
+                            <button class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-black" onclick="togglePlay(this)">
+                                <svg class="w-5 h-5 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+                            </button>
+                            <button class="w-8 h-8 flex items-center justify-center" onclick="nextTrack()">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 通知中心 -->
+        <div id="notification-center" class="absolute top-0 left-0 right-0 z-50 pointer-events-none">
+            <!-- 通知动态插入 -->
+        </div>
+
+        <!-- 底部手势区域 -->
+        <div id="gesture-area" class="absolute bottom-0 left-0 right-0 h-20 z-50 pointer-events-auto" 
+             ontouchstart="handleBottomGestureStart(event)" 
+             ontouchmove="handleBottomGestureMove(event)" 
+             ontouchend="handleBottomGestureEnd(event)">
+            <div id="gesture-bar" class="absolute bottom-2 left-1/2 -translate-x-1/2 w-36 h-1.5 bg-white/50 rounded-full transition-all duration-200 pointer-events-none"></div>
+        </div>
+
+    </div>
+
+    <script>
+        // ==================== 核心状态管理 ====================
+        const State = {
+            currentView: 'home', // home, app, multitask, control, minus-one
+            activeApp: null,
+            isIslandExpanded: false,
+            isControlOpen: false,
+            runningApps: [],
+            notifications: [],
+            gestureState: {
+                isActive: false,
+                startY: 0,
+                startX: 0,
+                currentY: 0,
+                currentX: 0,
+                startTime: 0,
+                velocity: 0,
+                direction: null
+            },
+            sliders: {
+                brightness: 70,
+                volume: 50
+            },
+            switches: {
+                airplane: false,
+                wifi: true,
+                bluetooth: true,
+                cellular: true,
+                flashlight: false
+            }
+        };
+
+        // ==================== 应用数据库 ====================
+        const AppDatabase = {
+            phone: {
+                name: '电话',
+                icon: 'M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z',
+                color: 'from-green-500 to-emerald-600',
+                type: 'system',
+                render: () => PhoneApp.render()
+            },
+            messages: {
+                name: '信息',
+                icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z',
+                color: 'from-green-400 to-green-500',
+                type: 'system',
+                render: () => MessagesApp.render()
+            },
+            browser: {
+                name: '浏览器',
+                icon: 'M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9',
+                color: 'from-white to-gray-200',
+                iconColor: 'text-blue-500',
+                type: 'system',
+                render: () => BrowserApp.render()
+            },
+            mail: {
+                name: '邮件',
+                icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
+                color: 'from-blue-400 to-blue-600',
+                type: 'system',
+                render: () => MailApp.render()
+            },
+            photos: {
+                name: '照片',
+                icon: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z',
+                color: 'from-white to-gray-100',
+                iconColor: 'text-purple-500',
+                type: 'system',
+                render: () => PhotosApp.render()
+            },
+            camera: {
+                name: '相机',
+                icon: 'M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z M15 13a3 3 0 11-6 0 3 3 0 016 0z',
+                color: 'from-gray-700 to-gray-800',
+                type: 'system',
+                render: () => CameraApp.render()
+            },
+            music: {
+                name: '音乐',
+                icon: 'M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3',
+                color: 'from-pink-500 to-red-600',
+                type: 'system',
+                render: () => MusicApp.render()
+            },
+            settings: {
+                name: '设置',
+                icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z',
+                color: 'from-gray-600 to-gray-700',
+                type: 'system',
+                render: () => SettingsApp.render()
+            },
+            weather: {
+                name: '天气',
+                icon: 'M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z',
+                color: 'from-blue-400 to-cyan-500',
+                type: 'app',
+                render: () => WeatherApp.render()
+            },
+            calendar: {
+                name: '日历',
+                icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+                color: 'from-red-500 to-pink-600',
+                type: 'app',
+                render: () => CalendarApp.render()
+            },
+            calculator: {
+                name: '计算器',
+                icon: 'M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z',
+                color: 'from-orange-500 to-amber-600',
+                type: 'app',
+                render: () => CalculatorApp.render()
+            },
+            notes: {
+                name: '备忘录',
+                icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+                color: 'from-yellow-400 to-orange-500',
+                type: 'app',
+                render: () => NotesApp.render()
+            },
+            maps: {
+                name: '地图',
+                icon: 'M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 7m0 13V7',
+                color: 'from-green-400 to-emerald-500',
+                type: 'app',
+                render: () => MapsApp.render()
+            },
+            clock: {
+                name: '时钟',
+                icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
+                color: 'from-gray-800 to-black',
+                type: 'app',
+                render: () => ClockApp.render()
+            },
+            search: {
+                name: '搜索',
+                icon: 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z',
+                color: 'from-gray-500 to-gray-600',
+                type: 'app',
+                render: () => SearchApp.render()
+            }
+        };
+
+        // ==================== 应用渲染器 ====================
+        const PhoneApp = {
+            render() {
+                return `
+                    <div class="h-full bg-black flex flex-col">
+                        <div class="pt-14 px-6 pb-4">
+                            <div class="flex justify-between items-center mb-6">
+                                <h1 class="text-3xl font-bold">最近通话</h1>
+                                <button class="text-blue-400 text-lg">编辑</button>
+                            </div>
+                            <div class="flex gap-4 mb-4 overflow-x-auto no-scrollbar">
+                                <div class="flex flex-col items-center gap-1 min-w-[64px]">
+                                    <div class="w-16 h-16 rounded-full bg-gray-800 flex items-center justify-center">
+                                        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                    </div>
+                                    <span class="text-xs">新建</span>
+                                </div>
+                                ${['张三', '李四', '王五', '赵六'].map(name => `
+                                    <div class="flex flex-col items-center gap-1 min-w-[64px]">
+                                        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xl font-bold">
+                                            ${name[0]}
+                                        </div>
+                                        <span class="text-xs truncate w-16 text-center">${name}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <div class="flex-1 overflow-y-auto scroll-container px-6">
+                            ${[1,2,3,4,5,6,7,8].map((_, i) => {
+                                const names = ['张三', '李四', '王五', '赵六', '陈七', '刘八'];
+                                const types = ['来电', '去电', '未接'];
+                                const name = names[i % names.length];
+                                const type = types[i % types.length];
+                                const color = type === '未接' ? 'text-red-400' : type === '去电' ? 'text-green-400' : 'text-gray-400';
+                                return `
+                                    <div class="flex items-center gap-4 py-4 border-b border-white/10 active:bg-white/5 transition-colors rounded-xl px-2 cursor-pointer" onclick="PhoneApp.call('${name}')">
+                                        <div class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-sm font-bold">
+                                            ${name[0]}
+                                        </div>
+                                        <div class="flex-1">
+                                            <div class="font-medium text-lg">${name}</div>
+                                            <div class="text-sm ${color}">${type} · ${i + 1}小时前</div>
+                                        </div>
+                                        <button class="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center text-green-500" onclick="event.stopPropagation(); PhoneApp.call('${name}')">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                                        </button>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                        <div class="p-6 flex justify-center pb-24">
+                            <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center shadow-lg shadow-green-500/30 active:scale-90 transition-transform" onclick="PhoneApp.openDialer()">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+            call(name) {
+                showNotification('电话', `正在呼叫 ${name}...`);
+            },
+            openDialer() {
+                showNotification('电话', '打开拨号键盘');
+            }
+        };
+
+        const MessagesApp = {
+            chats: [
+                { id: 1, name: '张三', msg: '晚上一起吃饭吗？', time: '刚刚', unread: 2, online: true },
+                { id: 2, name: '李四', msg: '项目文件发给你了', time: '5分钟前', unread: 0, online: false },
+                { id: 3, name: '王五', msg: '明天开会别忘了', time: '1小时前', unread: 1, online: true },
+                { id: 4, name: '赵六', msg: '好的，没问题', time: '昨天', unread: 0, online: false },
+                { id: 5, name: '陈七', msg: '周末去爬山吗？', time: '昨天', unread: 3, online: true }
+            ],
+            render() {
+                return `
+                    <div class="h-full bg-black flex flex-col">
+                        <div class="pt-14 px-6 pb-4 flex justify-between items-center">
+                            <button class="text-blue-400 text-lg" onclick="MessagesApp.filter()">过滤</button>
+                            <h1 class="text-3xl font-bold">信息</h1>
+                            <button class="text-blue-400 text-lg" onclick="MessagesApp.compose()">新建</button>
+                        </div>
+                        <div class="px-6 mb-4">
+                            <div class="liquid-glass rounded-2xl flex items-center gap-3 px-4 py-3">
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                <input type="text" placeholder="搜索" class="bg-transparent flex-1 outline-none text-white placeholder-gray-500" onfocus="this.parentElement.classList.add('ring-2', 'ring-blue-500/50')">
+                            </div>
+                        </div>
+                        <div class="flex-1 overflow-y-auto scroll-container px-6 pb-24">
+                            ${this.chats.map(chat => `
+                                <div class="flex items-center gap-4 py-4 border-b border-white/5 active:bg-white/5 transition-colors rounded-xl px-2 cursor-pointer" onclick="MessagesApp.openChat(${chat.id})">
+                                    <div class="relative">
+                                        <div class="w-14 h-14 rounded-full bg-gradient-to-br from-gray-700 to-gray-600 flex items-center justify-center text-xl font-bold">
+                                            ${chat.name[0]}
+                                        </div>
+                                        ${chat.online ? `<div class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-black"></div>` : ''}
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex justify-between items-center mb-1">
+                                            <div class="font-semibold text-lg">${chat.name}</div>
+                                            <div class="text-xs text-gray-500">${chat.time}</div>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <div class="text-sm text-gray-400 truncate pr-4">${chat.msg}</div>
+                                            ${chat.unread > 0 ? `<div class="min-w-[20px] h-5 bg-blue-500 rounded-full flex items-center justify-center text-xs font-bold">${chat.unread}</div>` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            },
+            openChat(id) {
+                const chat = this.chats.find(c => c.id === id);
+                const appLayer = document.getElementById('app-content');
+                appLayer.innerHTML = `
+                    <div class="h-full bg-black flex flex-col">
+                        <div class="pt-14 px-4 pb-4 flex items-center gap-4 border-b border-white/10">
+                            <button onclick="openApp('messages')" class="w-8 h-8 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                            </button>
+                            <div class="flex-1 text-center">
+                                <div class="font-semibold text-lg">${chat.name}</div>
+                                <div class="text-xs text-gray-400">${chat.online ? '在线' : '离线'}</div>
+                            </div>
+                            <button class="w-8 h-8 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path></svg>
+                            </button>
+                        </div>
+                        <div class="flex-1 overflow-y-auto scroll-container p-4 space-y-4" id="chat-messages">
+                            <div class="flex justify-center"><span class="text-xs text-gray-500 bg-gray-800/50 px-3 py-1 rounded-full">今天 ${new Date().toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit'})}</span></div>
+                            <div class="flex gap-3">
+                                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-600 flex items-center justify-center text-sm flex-shrink-0">${chat.name[0]}</div>
+                                <div class="message-bubble bg-gray-800 rounded-2xl rounded-tl-sm px-4 py-3 text-sm">
+                                    ${chat.msg}
+                                </div>
+                            </div>
+                            <div class="flex gap-3 justify-end">
+                                <div class="message-bubble bg-blue-500 rounded-2xl rounded-tr-sm px-4 py-3 text-sm">
+                                    好的，我知道了
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-4 border-t border-white/10 pb-24">
+                            <div class="liquid-glass rounded-full flex items-center gap-3 px-4 py-2">
+                                <button class="w-8 h-8 flex items-center justify-center text-gray-400">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                </button>
+                                <input type="text" placeholder="iMessage" class="bg-transparent flex-1 outline-none text-white" id="msg-input" onkeypress="if(event.key==='Enter')MessagesApp.send()">
+                                <button class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center" onclick="MessagesApp.send()">
+                                    <svg class="w-4 h-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+            send() {
+                const input = document.getElementById('msg-input');
+                const text = input.value.trim();
+                if (!text) return;
+                
+                const container = document.getElementById('chat-messages');
+                const bubble = document.createElement('div');
+                bubble.className = 'flex gap-3 justify-end message-anim';
+                bubble.innerHTML = `
+                    <div class="message-bubble bg-blue-500 rounded-2xl rounded-tr-sm px-4 py-3 text-sm">
+                        ${text}
+                    </div>
+                `;
+                container.appendChild(bubble);
+                container.scrollTop = container.scrollHeight;
+                input.value = '';
+                
+                // 模拟回复
+                setTimeout(() => {
+                    const reply = document.createElement('div');
+                    reply.className = 'flex gap-3 message-anim';
+                    reply.innerHTML = `
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-600 flex items-center justify-center text-sm flex-shrink-0">张</div>
+                        <div class="message-bubble bg-gray-800 rounded-2xl rounded-tl-sm px-4 py-3 text-sm">
+                            收到！👍
+                        </div>
+                    `;
+                    container.appendChild(reply);
+                    container.scrollTop = container.scrollHeight;
+                }, 1000);
+            },
+            filter() { showNotification('信息', '过滤功能'); },
+            compose() { showNotification('信息', '新建消息'); }
+        };
+
+        const BrowserApp = {
+            render() {
+                return `
+                    <div class="h-full bg-gray-100 flex flex-col text-gray-900">
+                        <div class="bg-gray-200 pt-14 px-4 pb-3">
+                            <div class="flex items-center gap-3 mb-3">
+                                <button class="w-8 h-8 flex items-center justify-center text-gray-600" onclick="BrowserApp.back()">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                                </button>
+                                <div class="flex-1 address-bar bg-white rounded-xl flex items-center gap-2 px-3 py-2 shadow-sm transition-all">
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                    <input type="text" value="nebula.os" class="bg-transparent flex-1 outline-none text-sm font-medium" onfocus="this.select()">
+                                    <button class="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center text-xs" onclick="BrowserApp.refresh()">↻</button>
+                                </div>
+                                <button class="w-8 h-8 flex items-center justify-center text-gray-600" onclick="BrowserApp.tabs()">
+                                    <div class="w-5 h-5 border-2 border-gray-600 rounded-md flex items-center justify-center text-xs font-bold">3</div>
+                                </button>
+                            </div>
+                            <div class="flex gap-6 text-sm text-gray-600 overflow-x-auto no-scrollbar">
+                                <button class="whitespace-nowrap font-medium text-blue-600">推荐</button>
+                                <button class="whitespace-nowrap">新闻</button>
+                                <button class="whitespace-nowrap">视频</button>
+                                <button class="whitespace-nowrap">购物</button>
+                                <button class="whitespace-nowrap">社交</button>
+                            </div>
+                        </div>
+                        <div class="flex-1 overflow-y-auto scroll-container p-4 space-y-4">
+                            <!-- 快捷入口 -->
+                            <div class="grid grid-cols-4 gap-4 mb-6">
+                                ${[
+                                    {name: '百度', color: 'bg-blue-600', icon: 'B'},
+                                    {name: '知乎', color: 'bg-blue-500', icon: '知'},
+                                    {name: 'B站', color: 'bg-pink-400', icon: 'B'},
+                                    {name: '微博', color: 'bg-red-500', icon: '微'},
+                                    {name: '淘宝', color: 'bg-orange-500', icon: '淘'},
+                                    {name: '京东', color: 'bg-red-600', icon: 'JD'},
+                                    {name: '微信', color: 'bg-green-500', icon: '微'},
+                                    {name: '更多', color: 'bg-gray-300', icon: '+'}
+                                ].map(site => `
+                                    <div class="flex flex-col items-center gap-2 cursor-pointer active:scale-95 transition-transform" onclick="BrowserApp.openSite('${site.name}')">
+                                        <div class="w-14 h-14 ${site.color} rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg">
+                                            ${site.icon}
+                                        </div>
+                                        <span class="text-xs text-gray-600">${site.name}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            
+                            <!-- 推荐内容 -->
+                            <div class="bg-white rounded-2xl p-4 shadow-sm">
+                                <div class="flex items-center gap-3 mb-3">
+                                    <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">N</div>
+                                    <div>
+                                        <div class="font-semibold text-sm">NebulaOS 官网</div>
+                                        <div class="text-xs text-gray-400">nebula.os · 刚刚</div>
+                                    </div>
+                                </div>
+                                <div class="h-40 bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl mb-3 flex items-center justify-center text-white text-2xl font-bold">
+                                    NebulaOS
+                                </div>
+                                <div class="font-semibold text-base mb-1">体验下一代移动操作系统</div>
+                                <div class="text-sm text-gray-600 line-clamp-2">液态玻璃设计，丝滑手势交互，重新定义移动体验...</div>
+                            </div>
+
+                            ${[1,2,3].map(i => `
+                                <div class="bg-white rounded-2xl p-4 shadow-sm flex gap-4 cursor-pointer active:scale-98 transition-transform">
+                                    <div class="flex-1">
+                                        <div class="font-semibold text-sm mb-2 line-clamp-2">科技新闻标题示例 ${i}</div>
+                                        <div class="text-xs text-gray-400">新浪网 · 2小时前</div>
+                                    </div>
+                                    <div class="w-24 h-16 bg-gray-200 rounded-lg flex-shrink-0"></div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            },
+            back() { showNotification('浏览器', '返回'); },
+            refresh() { showNotification('浏览器', '刷新页面'); },
+            tabs() { showNotification('浏览器', '切换标签页'); },
+            openSite(name) { showNotification('浏览器', `打开 ${name}`); }
+        };
+
+        const MusicApp = {
+            isPlaying: false,
+            currentTrack: 0,
+            tracks: [
+                {title: '夜曲', artist: '周杰伦', album: '十一月的萧邦'},
+                {title: '晴天', artist: '周杰伦', album: '叶惠美'},
+                {title: '七里香', artist: '周杰伦', album: '七里香'}
+            ],
+            render() {
+                const track = this.tracks[this.currentTrack];
+                return `
+                    <div class="h-full bg-gradient-to-b from-gray-900 to-black flex flex-col">
+                        <div class="pt-14 px-6 pb-4 flex justify-between items-center">
+                            <button onclick="MusicApp.minimize()">
+                                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+                            <div class="text-center">
+                                <div class="text-xs text-gray-400 uppercase tracking-widest">正在播放</div>
+                                <div class="text-sm font-medium mt-1">${track.album}</div>
+                            </div>
+                            <button onclick="MusicApp.menu()">
+                                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"></path></svg>
+                            </button>
+                        </div>
+                        
+                        <div class="flex-1 flex flex-col items-center justify-center px-8">
+                            <div class="w-72 h-72 rounded-3xl bg-gradient-to-br from-pink-500 via-purple-500 to-indigo-600 shadow-2xl mb-8 flex items-center justify-center relative overflow-hidden">
+                                <div class="absolute inset-0 bg-black/10"></div>
+                                <svg class="w-32 h-32 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
+                                ${this.isPlaying ? `
+                                    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-end gap-1 h-8">
+                                        ${[1,2,3,4].map(i => `<div class="w-1 bg-white/80 rounded-full music-wave" style="animation-delay: ${i*0.1}s; height: 60%"></div>`).join('')}
+                                    </div>
+                                ` : ''}
+                            </div>
+                            
+                            <div class="w-full mb-6">
+                                <div class="flex justify-between items-end mb-2">
+                                    <div>
+                                        <div class="text-2xl font-bold mb-1">${track.title}</div>
+                                        <div class="text-gray-400 text-lg">${track.artist}</div>
+                                    </div>
+                                    <button class="text-gray-400" onclick="MusicApp.like()">
+                                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="w-full mb-6">
+                                <div class="h-1 bg-gray-800 rounded-full mb-2 relative cursor-pointer" onclick="MusicApp.seek(event)">
+                                    <div class="absolute inset-y-0 left-0 bg-white rounded-full w-1/3"></div>
+                                    <div class="absolute top-1/2 left-1/3 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg opacity-0 hover:opacity-100 transition-opacity"></div>
+                                </div>
+                                <div class="flex justify-between text-xs text-gray-500">
+                                    <span>1:24</span>
+                                    <span>${this.isPlaying ? '3:45' : '3:45'}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center justify-between w-full px-4 mb-8">
+                                <button class="text-gray-400 hover:text-white transition-colors" onclick="MusicApp.shuffle()">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                </button>
+                                <button class="text-white" onclick="MusicApp.prev()">
+                                    <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"></path></svg>
+                                </button>
+                                <button class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-black shadow-lg active:scale-95 transition-transform" onclick="MusicApp.togglePlay()">
+                                    ${this.isPlaying ? 
+                                        `<svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>` :
+                                        `<svg class="w-8 h-8 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>`
+                                    }
+                                </button>
+                                <button class="text-white" onclick="MusicApp.next()">
+                                    <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"></path></svg>
+                                </button>
+                                <button class="text-gray-400 hover:text-white transition-colors" onclick="MusicApp.repeat()">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                </button>
+                            </div>
+                            
+                            <div class="flex items-center gap-4 w-full px-4">
+                                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
+                                <div class="flex-1 h-1 bg-gray-800 rounded-full">
+                                    <div class="w-2/3 h-full bg-white rounded-full"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+            togglePlay() {
+                this.isPlaying = !this.isPlaying;
+                openApp('music');
+                if (this.isPlaying) {
+                    showNotification('音乐', `开始播放: ${this.tracks[this.currentTrack].title}`);
+                }
+            },
+            next() {
+                this.currentTrack = (this.currentTrack + 1) % this.tracks.length;
+                openApp('music');
+                showNotification('音乐', `下一首: ${this.tracks[this.currentTrack].title}`);
+            },
+            prev() {
+                this.currentTrack = (this.currentTrack - 1 + this.tracks.length) % this.tracks.length;
+                openApp('music');
+            },
+            minimize() { goHome(); },
+            menu() { showNotification('音乐', '菜单'); },
+            like() { showNotification('音乐', '已添加到喜欢的歌曲'); },
+            shuffle() { showNotification('音乐', '随机播放'); },
+            repeat() { showNotification('音乐', '重复播放'); },
+            seek(e) { showNotification('音乐', '跳转进度'); }
+        };
+
+        const CalculatorApp = {
+            expression: '0',
+            render() {
+                return `
+                    <div class="h-full bg-black flex flex-col">
+                        <div class="flex-1 flex items-end justify-end p-6 pb-12">
+                            <div class="text-6xl font-light tabular-nums tracking-tight" id="calc-display">${this.expression}</div>
+                        </div>
+                        <div class="grid grid-cols-4 gap-3 p-4 pb-24">
+                            ${[
+                                {label: 'AC', color: 'bg-gray-400 text-black', action: 'clear'},
+                                {label: '±', color: 'bg-gray-400 text-black', action: 'negate'},
+                                {label: '%', color: 'bg-gray-400 text-black', action: 'percent'},
+                                {label: '÷', color: 'bg-orange-500 text-white', action: 'op', val: '/'},
+                                {label: '7', color: 'bg-gray-800 text-white', action: 'num', val: '7'},
+                                {label: '8', color: 'bg-gray-800 text-white', action: 'num', val: '8'},
+                                {label: '9', color: 'bg-gray-800 text-white', action: 'num', val: '9'},
+                                {label: '×', color: 'bg-orange-500 text-white', action: 'op', val: '*'},
+                                {label: '4', color: 'bg-gray-800 text-white', action: 'num', val: '4'},
+                                {label: '5', color: 'bg-gray-800 text-white', action: 'num', val: '5'},
+                                {label: '6', color: 'bg-gray-800 text-white', action: 'num', val: '6'},
+                                {label: '-', color: 'bg-orange-500 text-white', action: 'op', val: '-'},
+                                {label: '1', color: 'bg-gray-800 text-white', action: 'num', val: '1'},
+                                {label: '2', color: 'bg-gray-800 text-white', action: 'num', val: '2'},
+                                {label: '3', color: 'bg-gray-800 text-white', action: 'num', val: '3'},
+                                {label: '+', color: 'bg-orange-500 text-white', action: 'op', val: '+'},
+                                {label: '0', color: 'bg-gray-800 text-white col-span-2', action: 'num', val: '0'},
+                                {label: '.', color: 'bg-gray-800 text-white', action: 'num', val: '.'},
+                                {label: '=', color: 'bg-orange-500 text-white', action: 'calc'}
+                            ].map(btn => `
+                                <button class="${btn.color} ${btn.colSpan ? 'col-span-2 rounded-full' : 'aspect-square rounded-full'} text-2xl font-medium calc-btn flex items-center justify-center" 
+                                        onclick="CalculatorApp.handle('${btn.action}', '${btn.val || ''}')">
+                                    ${btn.label}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            },
+            handle(action, val) {
+                if (action === 'clear') {
+                    this.expression = '0';
+                } else if (action === 'num') {
+                    this.expression = this.expression === '0' ? val : this.expression + val;
+                } else if (action === 'op') {
+                    this.expression += ` ${val} `;
+                } else if (action === 'calc') {
+                    try {
+                        this.expression = String(eval(this.expression.replace(/×/g, '*').replace(/÷/g, '/'))) || '0';
+                    } catch {
+                        this.expression = 'Error';
+                    }
+                }
+                document.getElementById('calc-display').textContent = this.expression;
+            }
+        };
+
+        const WeatherApp = {
+            render() {
+                return `
+                    <div class="h-full bg-gradient-to-b from-blue-400 via-blue-500 to-blue-600 flex flex-col text-white">
+                        <div class="pt-14 px-6 pb-4">
+                            <div class="text-center">
+                                <div class="text-lg opacity-90">北京市</div>
+                                <div class="text-8xl font-thin mt-4">24°</div>
+                                <div class="text-xl mt-2">多云</div>
+                                <div class="text-lg opacity-80 mt-1">最高 28° · 最低 19°</div>
+                            </div>
+                        </div>
+                        <div class="flex-1 overflow-y-auto scroll-container px-6 pb-24">
+                            <div class="bg-white/20 backdrop-blur-lg rounded-3xl p-6 mb-6">
+                                <div class="text-sm opacity-80 mb-4">每小时预报</div>
+                                <div class="flex justify-between">
+                                    ${['现在', '14时', '15时', '16时', '17时', '18时'].map((time, i) => `
+                                        <div class="flex flex-col items-center gap-2">
+                                            <div class="text-sm">${time}</div>
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                                            <div class="text-lg font-medium">${24 + i}°</div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white/20 backdrop-blur-lg rounded-3xl p-6 mb-6">
+                                <div class="text-sm opacity-80 mb-4">10日预报</div>
+                                <div class="space-y-4">
+                                    ${['今天', '周五', '周六', '周日', '周一', '周二'].map((day, i) => `
+                                        <div class="flex items-center justify-between">
+                                            <div class="w-12">${day}</div>
+                                            <div class="flex-1 flex justify-center">
+                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                                            </div>
+                                            <div class="flex items-center gap-4 w-24 justify-end">
+                                                <span class="opacity-60">${19 + i}°</span>
+                                                <div class="w-16 h-1 bg-white/30 rounded-full relative">
+                                                    <div class="absolute inset-y-0 left-0 bg-white rounded-full" style="width: ${60 + i * 5}%"></div>
+                                                </div>
+                                                <span>${28 - i}°</span>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-white/20 backdrop-blur-lg rounded-3xl p-4">
+                                    <div class="text-sm opacity-80 mb-1">体感温度</div>
+                                    <div class="text-3xl font-medium">26°</div>
+                                </div>
+                                <div class="bg-white/20 backdrop-blur-lg rounded-3xl p-4">
+                                    <div class="text-sm opacity-80 mb-1">湿度</div>
+                                    <div class="text-3xl font-medium">45%</div>
+                                </div>
+                                <div class="bg-white/20 backdrop-blur-lg rounded-3xl p-4">
+                                    <div class="text-sm opacity-80 mb-1">能见度</div>
+                                    <div class="text-3xl font-medium">10km</div>
+                                </div>
+                                <div class="bg-white/20 backdrop-blur-lg rounded-3xl p-4">
+                                    <div class="text-sm opacity-80 mb-1">气压</div>
+                                    <div class="text-3xl font-medium">1012hPa</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        };
+
+        const SettingsApp = {
+            render() {
+                return `
+                    <div class="h-full bg-gray-900 flex flex-col">
+                        <div class="pt-14 px-6 pb-4">
+                            <h1 class="text-3xl font-bold">设置</h1>
+                        </div>
+                        <div class="flex-1 overflow-y-auto scroll-container px-6 pb-24">
+                            <div class="flex items-center gap-4 py-6 mb-6 cursor-pointer active:opacity-70 transition-opacity" onclick="SettingsApp.profile()">
+                                <div class="w-16 h-16 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-2xl font-bold">
+                                    A
+                                </div>
+                                <div class="flex-1">
+                                    <div class="text-xl font-semibold">Aurora User</div>
+                                    <div class="text-sm text-gray-400">Apple ID、iCloud、媒体与购买项目</div>
+                                </div>
+                                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                ${[
+                                    {icon: 'airplane', color: 'bg-orange-500', name: '飞行模式', toggle: true, key: 'airplane'},
+                                    {icon: 'wifi', color: 'bg-blue-500', name: 'Wi-Fi', value: 'Nebula-Net', toggle: true, key: 'wifi'},
+                                    {icon: 'bluetooth', color: 'bg-blue-500', name: '蓝牙', value: '开启', toggle: true, key: 'bluetooth'},
+                                    {icon: 'signal', color: 'bg-green-500', name: '蜂窝网络', toggle: true, key: 'cellular'},
+                                    {icon: 'hotspot', color: 'bg-green-500', name: '个人热点', value: '关闭', toggle: true, key: 'hotspot'}
+                                ].map(item => `
+                                    <div class="bg-gray-800/50 rounded-xl flex items-center gap-4 p-4 cursor-pointer active:bg-gray-800 transition-colors" onclick="${item.toggle ? `SettingsApp.toggle('${item.key}')` : ''}">
+                                        <div class="w-8 h-8 ${item.color} rounded-lg flex items-center justify-center flex-shrink-0">
+                                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                        </div>
+                                        <div class="flex-1 flex justify-between items-center">
+                                            <span class="font-medium">${item.name}</span>
+                                            ${item.toggle ? `
+                                                <div class="w-12 h-7 ${State.switches[item.key] ? 'bg-green-500' : 'bg-gray-600'} rounded-full relative transition-colors duration-300" id="toggle-${item.key}">
+                                                    <div class="absolute top-1 ${State.switches[item.key] ? 'left-6' : 'left-1'} w-5 h-5 bg-white rounded-full shadow transition-all duration-300"></div>
+                                                </div>
+                                            ` : `<span class="text-gray-400 text-sm">${item.value}</span>`}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            
+                            <div class="mt-6 space-y-3">
+                                ${[
+                                    {icon: 'bell', color: 'bg-red-500', name: '通知'},
+                                    {icon: 'speaker', color: 'bg-red-500', name: '声音与触感'},
+                                    {icon: 'moon', color: 'bg-indigo-500', name: '勿扰模式'},
+                                    {icon: 'screen', color: 'bg-blue-500', name: '屏幕使用时间'}
+                                ].map(item => `
+                                    <div class="bg-gray-800/50 rounded-xl flex items-center gap-4 p-4 cursor-pointer active:bg-gray-800 transition-colors">
+                                        <div class="w-8 h-8 ${item.color} rounded-lg flex items-center justify-center flex-shrink-0">
+                                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                                        </div>
+                                        <div class="flex-1 flex justify-between items-center">
+                                            <span class="font-medium">${item.name}</span>
+                                            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+            toggle(key) {
+                State.switches[key] = !State.switches[key];
+                const toggle = document.getElementById(`toggle-${key}`);
+                if (toggle) {
+                    toggle.className = `w-12 h-7 ${State.switches[key] ? 'bg-green-500' : 'bg-gray-600'} rounded-full relative transition-colors duration-300`;
+                    toggle.innerHTML = `<div class="absolute top-1 ${State.switches[key] ? 'left-6' : 'left-1'} w-5 h-5 bg-white rounded-full shadow transition-all duration-300"></div>`;
+                }
+                showNotification('设置', `${key} 已${State.switches[key] ? '开启' : '关闭'}`);
+            },
+            profile() { showNotification('设置', '打开个人资料'); }
+        };
+
+        // 其他应用占位
+        const MailApp = {
+            render() {
+                return `
+                    <div class="h-full bg-white text-gray-900 flex flex-col">
+                        <div class="pt-14 px-6 pb-4 flex justify-between items-center border-b">
+                            <button class="text-blue-600 text-lg">编辑</button>
+                            <h1 class="text-3xl font-bold">邮件</h1>
+                            <button class="text-blue-600 text-lg" onclick="MailApp.compose()">新建</button>
+                        </div>
+                        <div class="flex-1 overflow-y-auto scroll-container">
+                            <div class="p-4 space-y-4">
+                                ${[1,2,3,4,5].map(i => `
+                                    <div class="border-b pb-4 cursor-pointer active:bg-gray-50 transition-colors">
+                                        <div class="flex justify-between items-start mb-1">
+                                            <div class="font-bold text-lg">发件人 ${i}</div>
+                                            <div class="text-sm text-gray-500">10:${30 + i}</div>
+                                        </div>
+                                        <div class="font-semibold text-gray-800 mb-1">邮件主题示例 ${i}</div>
+                                        <div class="text-gray-600 text-sm line-clamp-2">这是邮件内容的预览文本，显示邮件的前几行内容...</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+            compose() { showNotification('邮件', '撰写新邮件'); }
+        };
+
+        const PhotosApp = {
+            render() {
+                return `
+                    <div class="h-full bg-black flex flex-col">
+                        <div class="pt-14 px-6 pb-4">
+                            <h1 class="text-3xl font-bold">照片</h1>
+                            <div class="flex gap-4 mt-4 text-sm">
+                                <button class="text-white font-medium">图库</button>
+                                <button class="text-gray-500">为你推荐</button>
+                                <button class="text-gray-500">相簿</button>
+                            </div>
+                        </div>
+                        <div class="flex-1 overflow-y-auto scroll-container px-2">
+                            <div class="grid grid-cols-3 gap-1">
+                                ${Array(20).fill(0).map((_, i) => `
+                                    <div class="aspect-square bg-gray-800 cursor-pointer active:opacity-80 transition-opacity" style="background: hsl(${i * 20}, 60%, 50%)"></div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        };
+
+        const CameraApp = {
+            render() {
+                return `
+                    <div class="h-full bg-black flex flex-col relative">
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="text-white/50 text-lg">相机预览</div>
+                        </div>
+                        <div class="absolute top-14 left-0 right-0 flex justify-center gap-8 text-white/80 text-sm">
+                            <span>视频</span>
+                            <span class="text-yellow-400 font-medium">照片</span>
+                            <span>人像</span>
+                            <span>全景</span>
+                        </div>
+                        <div class="absolute bottom-24 left-0 right-0 flex justify-center items-center gap-8">
+                            <div class="w-12 h-12 rounded-full bg-gray-800/50 flex items-center justify-center">
+                                <div class="w-6 h-6 bg-gray-400 rounded-sm"></div>
+                            </div>
+                            <div class="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center cursor-pointer active:scale-95 transition-transform" onclick="CameraApp.shutter()">
+                                <div class="w-16 h-16 bg-white rounded-full"></div>
+                            </div>
+                            <div class="w-12 h-12 rounded-full bg-gray-800/50 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+            shutter() {
+                showNotification('相机', '咔嚓！照片已保存');
+            }
+        };
+
+        const CalendarApp = {
+            render() {
+                return `
+                    <div class="h-full bg-white text-gray-900 flex flex-col">
+                        <div class="pt-14 px-6 pb-4">
+                            <div class="flex justify-between items-center mb-4">
+                                <h1 class="text-3xl font-bold">10月</h1>
+                                <div class="flex gap-4">
+                                    <button class="text-red-500">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                                    </button>
+                                    <button class="text-red-500">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-7 gap-2 text-center text-sm text-gray-500 mb-2">
+                                <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
+                            </div>
+                            <div class="grid grid-cols-7 gap-2 text-center">
+                                ${Array(31).fill(0).map((_, i) => {
+                                    const day = i + 1;
+                                    const isToday = day === 24;
+                                    const hasEvent = [5, 12, 18, 24, 28].includes(day);
+                                    return `
+                                        <div class="aspect-square flex flex-col items-center justify-center rounded-full cursor-pointer ${isToday ? 'bg-red-500 text-white' : 'hover:bg-gray-100'} relative">
+                                            <span class="text-sm ${isToday ? 'font-bold' : ''}">${day}</span>
+                                            ${hasEvent ? `<div class="w-1 h-1 ${isToday ? 'bg-white' : 'bg-red-500'} rounded-full mt-1"></div>` : ''}
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                        <div class="flex-1 bg-gray-50 rounded-t-3xl p-6">
+                            <div class="text-sm font-semibold text-gray-500 mb-4">今天</div>
+                            <div class="space-y-3">
+                                <div class="bg-white rounded-xl p-4 shadow-sm flex items-center gap-3">
+                                    <div class="w-1 h-12 bg-blue-500 rounded-full"></div>
+                                    <div class="flex-1">
+                                        <div class="font-semibold">团队会议</div>
+                                        <div class="text-sm text-gray-500">14:00 - 15:30 · 会议室 A</div>
+                                    </div>
+                                </div>
+                                <div class="bg-white rounded-xl p-4 shadow-sm flex items-center gap-3">
+                                    <div class="w-1 h-12 bg-purple-500 rounded-full"></div>
+                                    <div class="flex-1">
+                                        <div class="font-semibold">项目评审</div>
+                                        <div class="text-sm text-gray-500">16:00 - 17:00 · 线上</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        };
+
+        const NotesApp = {
+            render() {
+                return `
+                    <div class="h-full bg-[#f5f5f7] text-gray-900 flex flex-col">
+                        <div class="pt-14 px-6 pb-4 flex justify-between items-center">
+                            <h1 class="text-3xl font-bold">备忘录</h1>
+                            <button class="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center shadow-lg" onclick="NotesApp.newNote()">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            </button>
+                        </div>
+                        <div class="px-6 mb-4">
+                            <div class="bg-gray-200/50 rounded-xl flex items-center gap-3 px-4 py-2">
+                                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                <input type="text" placeholder="搜索" class="bg-transparent flex-1 outline-none">
+                            </div>
+                        </div>
+                        <div class="flex-1 overflow-y-auto scroll-container px-6 pb-24">
+                            <div class="text-sm text-gray-500 mb-3">今天</div>
+                            <div class="space-y-3">
+                                ${['购物清单', '会议记录', '旅行计划'].map((title, i) => `
+                                    <div class="bg-white rounded-xl p-4 shadow-sm cursor-pointer active:scale-98 transition-transform" onclick="NotesApp.openNote('${title}')">
+                                        <div class="font-semibold mb-1">${title}</div>
+                                        <div class="text-sm text-gray-500 line-clamp-2">${new Date().toLocaleTimeString()} · 这是备忘录内容的预览...</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+            newNote() { showNotification('备忘录', '创建新备忘录'); },
+            openNote(title) { showNotification('备忘录', `打开: ${title}`); }
+        };
+
+        const MapsApp = {
+            render() {
+                return `
+                    <div class="h-full bg-[#e5e5e5] flex flex-col relative">
+                        <div class="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-green-100 to-blue-100">
+                            <div class="text-gray-400 text-lg">地图视图</div>
+                        </div>
+                        <div class="absolute top-14 left-4 right-4">
+                            <div class="bg-white rounded-xl shadow-lg flex items-center gap-3 px-4 py-3">
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                <input type="text" placeholder="搜索地点" class="bg-transparent flex-1 outline-none">
+                                <button class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                                    <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="absolute bottom-24 right-4 flex flex-col gap-3">
+                            <button class="w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                            </button>
+                            <button class="w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        };
+
+        const ClockApp = {
+            render() {
+                return `
+                    <div class="h-full bg-black flex flex-col">
+                        <div class="pt-14 px-6 pb-4">
+                            <div class="flex gap-6 text-lg mb-6">
+                                <button class="text-white font-medium border-b-2 border-orange-500 pb-1">闹钟</button>
+                                <button class="text-gray-500">世界时钟</button>
+                                <button class="text-gray-500">秒表</button>
+                                <button class="text-gray-500">计时器</button>
+                            </div>
+                        </div>
+                        <div class="flex-1 overflow-y-auto scroll-container px-6 pb-24">
+                            <div class="space-y-4">
+                                ${[
+                                    {time: '07:00', label: '起床', active: true},
+                                    {time: '08:30', label: '上班', active: true},
+                                    {time: '12:00', label: '午餐', active: false},
+                                    {time: '18:00', label: '下班', active: true},
+                                    {time: '23:00', label: '睡觉', active: false}
+                                ].map(alarm => `
+                                    <div class="bg-gray-900 rounded-xl p-4 flex items-center justify-between">
+                                        <div>
+                                            <div class="text-4xl font-light ${alarm.active ? 'text-white' : 'text-gray-500'}">${alarm.time}</div>
+                                            <div class="text-sm text-gray-500 mt-1">${alarm.label}</div>
+                                        </div>
+                                        <div class="w-12 h-7 ${alarm.active ? 'bg-green-500' : 'bg-gray-700'} rounded-full relative cursor-pointer" onclick="this.classList.toggle('bg-green-500'); this.classList.toggle('bg-gray-700'); this.querySelector('div').classList.toggle('translate-x-5')">
+                                            <div class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${alarm.active ? 'translate-x-5' : ''}"></div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <div class="absolute bottom-24 right-6">
+                            <button class="w-14 h-14 bg-orange-500 rounded-full flex items-center justify-center shadow-lg" onclick="ClockApp.addAlarm()">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            },
+            addAlarm() { showNotification('时钟', '添加闹钟'); }
+        };
+
+        const SearchApp = {
+            render() {
+                return `
+                    <div class="h-full bg-gray-900 flex flex-col">
+                        <div class="pt-14 px-6 pb-4">
+                            <div class="flex items-center gap-3">
+                                <button onclick="goHome()" class="text-blue-400">取消</button>
+                                <div class="flex-1 bg-gray-800 rounded-xl flex items-center gap-3 px-4 py-2">
+                                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                    <input type="text" placeholder="搜索应用、联系人、短信..." class="bg-transparent flex-1 outline-none text-white" autofocus>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex-1 overflow-y-auto scroll-container px-6 pb-24">
+                            <div class="text-sm text-gray-500 mb-3">建议</div>
+                            <div class="space-y-2">
+                                ${['天气', '设置', '照片', '音乐'].map(app => `
+                                    <div class="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 cursor-pointer" onclick="openApp('${app.toLowerCase()}')">
+                                        <div class="w-10 h-10 bg-gray-700 rounded-xl flex items-center justify-center">
+                                            <span class="text-lg">${app[0]}</span>
+                                        </div>
+                                        <div class="flex-1">${app}</div>
+                                        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        };
+
+        // ==================== 核心手势系统 ====================
+        
+        // 底部手势处理
+        function handleBottomGestureStart(e) {
+            if (State.isControlOpen) return;
+            
+            State.gestureState.isActive = true;
+            State.gestureState.startY = e.touches[0].clientY;
+            State.gestureState.startX = e.touches[0].clientX;
+            State.gestureState.startTime = Date.now();
+            
+            const bar = document.getElementById('gesture-bar');
+            bar.style.width = '160px';
+            bar.style.background = 'rgba(255,255,255,0.8)';
+            
+            // 准备手势跟随
+            const appLayer = document.getElementById('app-layer');
+            const homeScreen = document.getElementById('home-screen');
+            const multitaskLayer = document.getElementById('multitask-layer');
+            
+            if (State.currentView === 'app') {
+                appLayer.classList.add('gesture-follow');
+                appLayer.classList.remove('gesture-spring');
+                homeScreen.classList.add('gesture-follow');
+                homeScreen.classList.remove('gesture-spring');
+            } else if (State.currentView === 'home') {
+                homeScreen.classList.add('gesture-follow');
+                homeScreen.classList.remove('gesture-spring');
+                multitaskLayer.classList.remove('hidden');
+                multitaskLayer.classList.add('gesture-follow');
+                multitaskLayer.classList.remove('gesture-spring');
+            }
+        }
+
+        function handleBottomGestureMove(e) {
+            if (!State.gestureState.isActive || State.isControlOpen) return;
+            
+            const touch = e.touches[0];
+            const deltaY = State.gestureState.startY - touch.clientY;
+            const deltaX = touch.clientX - State.gestureState.startX;
+            const screenHeight = window.innerHeight;
+            
+            State.gestureState.currentY = touch.clientY;
+            State.gestureState.currentX = touch.clientX;
+            
+            // 计算速度用于惯性判断
+            const timeDelta = Date.now() - State.gestureState.startTime;
+            State.gestureState.velocity = deltaY / timeDelta;
+            
+            if (State.currentView === 'app') {
+                // 应用内返回手势
+                const progress = Math.max(0, Math.min(deltaY / (screenHeight * 0.3), 1));
+                const translateY = -progress * 100;
+                const scale = 0.9 + progress * 0.1;
+                const opacity = 0.5 + progress * 0.5;
+                
+                const appLayer = document.getElementById('app-layer');
+                const homeScreen = document.getElementById('home-screen');
+                
+                appLayer.style.transform = `translateY(${translateY}%)`;
+                homeScreen.style.transform = `scale(${scale})`;
+                homeScreen.style.opacity = opacity;
+                
+            } else if (State.currentView === 'home') {
+                // 主页进入多任务
+                if (deltaY > 20) {
+                    const progress = Math.max(0, Math.min(deltaY / (screenHeight * 0.4), 1));
+                    const translateY = (1 - progress) * 100;
+                    const scale = 1 - progress * 0.1;
+                    const opacity = 1 - progress * 0.5;
+                    
+                    const homeScreen = document.getElementById('home-screen');
+                    const multitaskLayer = document.getElementById('multitask-layer');
+                    
+                    homeScreen.style.transform = `scale(${scale})`;
+                    homeScreen.style.opacity = opacity;
+                    multitaskLayer.style.transform = `translateY(${translateY}%)`;
+                }
+            } else if (State.currentView === 'multitask') {
+                // 多任务返回主页
+                const progress = Math.max(0, Math.min(-deltaY / (screenHeight * 0.3), 1));
+                const translateY = progress * 100;
+                const scale = 0.9 + progress * 0.1;
+                const opacity = 0.5 + progress * 0.5;
+                
+                const homeScreen = document.getElementById('home-screen');
+                const multitaskLayer = document.getElementById('multitask-layer');
+                
+                homeScreen.style.transform = `scale(${scale})`;
+                homeScreen.style.opacity = opacity;
+                multitaskLayer.style.transform = `translateY(${translateY}%)`;
+            }
+        }
+
+        function handleBottomGestureEnd(e) {
+            if (!State.gestureState.isActive) return;
+            State.gestureState.isActive = false;
+            
+            const bar = document.getElementById('gesture-bar');
+            bar.style.width = '144px';
+            bar.style.background = 'rgba(255,255,255,0.5)';
+            
+            const deltaY = State.gestureState.startY - State.gestureState.currentY;
+            const velocity = State.gestureState.velocity;
+            const threshold = window.innerHeight * 0.15;
+            
+            // 添加弹簧动画类
+            const appLayer = document.getElementById('app-layer');
+            const homeScreen = document.getElementById('home-screen');
+            const multitaskLayer = document.getElementById('multitask-layer');
+            
+            appLayer.classList.remove('gesture-follow');
+            appLayer.classList.add('gesture-spring');
+            homeScreen.classList.remove('gesture-follow');
+            homeScreen.classList.add('gesture-spring');
+            multitaskLayer.classList.remove('gesture-follow');
+            multitaskLayer.classList.add('gesture-spring');
+            
+            if (State.currentView === 'app') {
+                if (deltaY > threshold || velocity > 0.5) {
+                    goHome();
+                } else {
+                    // 回弹
+                    appLayer.style.transform = 'translateY(0)';
+                    homeScreen.style.transform = 'scale(0.9)';
+                    homeScreen.style.opacity = '0.5';
+                }
+            } else if (State.currentView === 'home') {
+                if (deltaY > threshold || velocity > 0.5) {
+                    showMultitasking();
+                } else {
+                    homeScreen.style.transform = 'scale(1)';
+                    homeScreen.style.opacity = '1';
+                    multitaskLayer.style.transform = 'translateY(100%)';
+                    setTimeout(() => multitaskLayer.classList.add('hidden'), 300);
+                }
+            } else if (State.currentView === 'multitask') {
+                if (deltaY < -threshold || velocity < -0.5) {
+                    goHome();
+                } else {
+                    homeScreen.style.transform = 'scale(0.9)';
+                    homeScreen.style.opacity = '0';
+                    multitaskLayer.style.transform = 'translateY(0)';
+                }
+            }
+        }
+
+        // 状态栏下拉手势
+        function handleStatusPullStart(e) {
+            State.gestureState.isActive = true;
+            State.gestureState.startY = e.touches[0].clientY;
+            State.gestureState.startTime = Date.now();
+        }
+
+        function handleStatusPullMove(e) {
+            if (!State.gestureState.isActive) return;
+            
+            const deltaY = e.touches[0].clientY - State.gestureState.startY;
+            if (deltaY < 0) return; // 只允许下拉
+            
+            const controlPanel = document.getElementById('control-panel');
+            const backdrop = document.getElementById('control-backdrop');
+            
+            const progress = Math.min(deltaY / 200, 1);
+            const translateY = -100 + progress * 100;
+            
+            controlPanel.style.transform = `translateY(${translateY}%)`;
+            backdrop.style.backgroundColor = `rgba(0,0,0,${progress * 0.5})`;
+            
+            State.isControlOpen = progress > 0.1;
+        }
+
+        function handleStatusPullEnd(e) {
+            State.gestureState.isActive = false;
+            const deltaY = State.gestureState.currentY - State.gestureState.startY;
+            
+            const controlPanel = document.getElementById('control-panel');
+            
+            if (deltaY > 50) {
+                openControlCenter();
+            } else {
+                closeControlCenter();
+            }
+        }
+
+        // 滑块手势
+        function handleSliderStart(e, type) {
+            e.stopPropagation();
+            State.gestureState.isSliderActive = true;
+            State.gestureState.sliderType = type;
+            updateSlider(e.touches[0].clientX, type);
+        }
+
+        function handleSliderMove(e, type) {
+            if (!State.gestureState.isSliderActive) return;
+            e.stopPropagation();
+            updateSlider(e.touches[0].clientX, type);
+        }
+
+        function handleSliderEnd(e) {
+            State.gestureState.isSliderActive = false;
+        }
+
+        function updateSlider(clientX, type) {
+            const slider = type === 'brightness' ? 
+                document.querySelector('#brightness-fill').parentElement : 
+                document.querySelector('#volume-fill').parentElement;
+            
+            const rect = slider.getBoundingClientRect();
+            const percent = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
+            
+            State.sliders[type] = Math.round(percent);
+            
+            const fill = type === 'brightness' ? document.getElementById('brightness-fill') : document.getElementById('volume-fill');
+            const thumb = type === 'brightness' ? document.getElementById('brightness-thumb') : document.getElementById('volume-thumb');
+            const value = type === 'brightness' ? document.getElementById('brightness-value') : document.getElementById('volume-value');
+            
+            fill.style.width = `${percent}%`;
+            thumb.style.left = `${percent}%`;
+            value.textContent = `${Math.round(percent)}%`;
+            
+            // 实时调整屏幕亮度模拟
+            if (type === 'brightness') {
+                document.getElementById('wallpaper-layer').style.filter = `brightness(${0.3 + percent / 100 * 0.7})`;
+            }
+        }
+
+        // ==================== 系统功能 ====================
+
+        function init() {
+            renderAppGrid();
+            updateTime();
+            setInterval(updateTime, 1000);
+            
+            // 初始化日期
+            const date = new Date();
+            const options = { month: 'long', day: 'numeric', weekday: 'long' };
+            document.getElementById('minus-date').textContent = date.toLocaleDateString('zh-CN', options);
+            
+            // 负一屏手势
+            const homeScreen = document.getElementById('home-screen');
+            let startX = 0;
+            
+            homeScreen.addEventListener('touchstart', (e) => {
+                if (e.touches[0].clientX < 50) startX = e.touches[0].clientX;
+            }, {passive: true});
+            
+            homeScreen.addEventListener('touchmove', (e) => {
+                if (startX && e.touches[0].clientX - startX > 50) {
+                    showMinusOne();
+                }
+            }, {passive: true});
+            
+            homeScreen.addEventListener('touchend', () => {
+                startX = 0;
+            }, {passive: true});
+        }
+
+        function renderAppGrid() {
+            const apps = [
+                ['phone', 'messages', 'browser', 'mail'],
+                ['photos', 'camera', 'music', 'settings'],
+                ['weather', 'calendar', 'calculator', 'notes'],
+                ['maps', 'clock', 'search', 'browser']
+            ];
+            
+            const grid = document.getElementById('app-grid');
+            grid.innerHTML = apps.flat().map((appId, index) => {
+                const app = AppDatabase[appId];
+                if (!app) return '';
+                return `
+                    <div class="flex flex-col items-center gap-1 cursor-pointer" onclick="openApp('${appId}')" style="animation: fadeIn 0.5s ease ${index * 0.05}s both;">
+                        <div class="app-icon w-[60px] h-[60px] bg-gradient-to-br ${app.color} rounded-2xl flex items-center justify-center shadow-lg relative overflow-hidden">
+                            <svg class="w-8 h-8 ${app.iconColor || 'text-white'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="${app.icon}"></path>
+                            </svg>
+                            ${appId === 'messages' ? '<div class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs font-bold">3</div>' : ''}
+                        </div>
+                        <span class="text-[11px] font-medium mt-1 text-white/90">${app.name}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openApp(appId) {
+            if (State.isControlOpen) {
+                closeControlCenter();
+                return;
+            }
+            
+            const app = AppDatabase[appId];
+            if (!app) return;
+            
+            State.activeApp = appId;
+            State.currentView = 'app';
+            
+            // 添加到运行中的应用
+            if (!State.runningApps.find(a => a.id === appId)) {
+                State.runningApps.push({ id: appId, name: app.name, color: app.color });
+            }
+            
+            const appLayer = document.getElementById('app-layer');
+            const homeScreen = document.getElementById('home-screen');
+            
+            appLayer.innerHTML = `<div class="h-full w-full animate-fadeIn">${app.render()}</div>`;
+            
+            appLayer.classList.remove('hidden');
+            appLayer.style.transform = 'translateY(0)';
+            homeScreen.style.transform = 'scale(0.9)';
+            homeScreen.style.opacity = '0.5';
+            
+            // 触发 Island 动画
+            if (appId === 'music' && MusicApp.isPlaying) {
+                expandIsland();
+            }
+        }
+
+        function goHome() {
+            State.currentView = 'home';
+            State.activeApp = null;
+            
+            const appLayer = document.getElementById('app-layer');
+            const homeScreen = document.getElementById('home-screen');
+            const multitaskLayer = document.getElementById('multitask-layer');
+            const minusOne = document.getElementById('minus-one');
+            
+            appLayer.style.transform = 'translateY(100%)';
+            homeScreen.style.transform = 'scale(1)';
+            homeScreen.style.opacity = '1';
+            multitaskLayer.style.transform = 'translateY(100%)';
+            minusOne.style.transform = 'translateX(-100%)';
+            
+            setTimeout(() => {
+                multitaskLayer.classList.add('hidden');
+            }, 300);
+            
+            // 收起 Island
+            if (State.isIslandExpanded) {
+                toggleIsland();
+            }
+        }
+
+        function showMultitasking() {
+            State.currentView = 'multitask';
+            
+            const multitaskLayer = document.getElementById('multitask-layer');
+            const homeScreen = document.getElementById('home-screen');
+            const taskList = document.getElementById('task-list');
+            
+            // 生成任务卡片
+            const apps = State.runningApps.length > 0 ? State.runningApps : [
+                {id: 'browser', name: '浏览器', color: 'from-blue-400 to-blue-600'},
+                {id: 'music', name: '音乐', color: 'from-pink-500 to-red-600'}
+            ];
+            
+            taskList.innerHTML = apps.map((app, index) => `
+                <div class="task-card bg-gray-800 rounded-3xl overflow-hidden relative h-72 shadow-2xl cursor-pointer" 
+                     style="z-index: ${apps.length - index}"
+                     onclick="openApp('${app.id}')">
+                    <div class="absolute top-0 left-0 right-0 h-8 bg-gray-700/50 backdrop-blur flex items-center justify-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-red-500/80"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500/80"></div>
+                    </div>
+                    <div class="h-full pt-8 bg-gradient-to-br ${app.color} flex items-center justify-center opacity-80">
+                        <span class="text-3xl font-bold text-white/50">${app.name}</span>
+                    </div>
+                    <button class="absolute top-2 right-2 w-8 h-8 bg-black/30 rounded-full flex items-center justify-center text-white hover:bg-black/50 transition-colors" onclick="event.stopPropagation(); closeTask('${app.id}')">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+            `).join('');
+            
+            multitaskLayer.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                multitaskLayer.style.transform = 'translateY(0)';
+                homeScreen.style.transform = 'scale(0.9)';
+                homeScreen.style.opacity = '0';
+            });
+        }
+
+        function closeTask(appId) {
+            State.runningApps = State.runningApps.filter(a => a.id !== appId);
+            showMultitasking();
+        }
+
+        function closeAllTasks() {
+            State.runningApps = [];
+            goHome();
+            showNotification('多任务', '已关闭所有应用');
+        }
+
+        function openControlCenter() {
+            State.isControlOpen = true;
+            const panel = document.getElementById('control-panel');
+            const backdrop = document.getElementById('control-backdrop');
+            
+            panel.style.transform = 'translateY(0)';
+            backdrop.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        }
+
+        function closeControlCenter() {
+            State.isControlOpen = false;
+            const panel = document.getElementById('control-panel');
+            const backdrop = document.getElementById('control-backdrop');
+            
+            panel.style.transform = 'translateY(-100%)';
+            backdrop.style.backgroundColor = 'rgba(0,0,0,0)';
+        }
+
+        function toggleControlSwitch(el, type) {
+            const bg = el.querySelector('.switch-bg');
+            const isActive = bg.classList.contains('bg-blue-500') || bg.classList.contains('bg-green-500');
+            
+            if (isActive) {
+                bg.className = 'w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center switch-bg transition-colors duration-300';
+            } else {
+                const color = type === 'cellular' ? 'bg-green-500' : 'bg-blue-500';
+                bg.className = `w-10 h-10 rounded-full ${color} flex items-center justify-center switch-bg transition-colors duration-300`;
+            }
+            
+            State.switches[type] = !isActive;
+            
+            // 触觉反馈
+            if (navigator.vibrate) navigator.vibrate(10);
+        }
+
+        function showMinusOne() {
+            const minusOne = document.getElementById('minus-one');
+            minusOne.style.transform = 'translateX(0)';
+            State.currentView = 'minus-one';
+        }
+
+        // Island 控制
+        function toggleIsland() {
+            const island = document.getElementById('dynamic-island');
+            const content = island.querySelector('.island-content');
+            const expandedContent = document.getElementById('island-expanded-content');
+            
+            State.isIslandExpanded = !State.isIslandExpanded;
+            
+            if (State.isIslandExpanded) {
+                island.style.width = '90%';
+                island.style.height = '120px';
+                island.style.borderRadius = '24px';
+                content.style.display = 'none';
+                expandedContent.style.display = 'flex';
+                island.classList.add('island-expanded');
+            } else {
+                island.style.width = '120px';
+                island.style.height = '40px';
+                island.style.borderRadius = '20px';
+                content.style.display = 'flex';
+                expandedContent.style.display = 'none';
+                island.classList.remove('island-expanded');
+            }
+        }
+
+        function expandIsland() {
+            if (!State.isIslandExpanded) toggleIsland();
+        }
+
+        // 手电筒
+        function toggleFlashlight() {
+            State.switches.flashlight = !State.switches.flashlight;
+            const icon = document.getElementById('flashlight-icon');
+            if (State.switches.flashlight) {
+                icon.classList.remove('bg-blue-500');
+                icon.classList.add('bg-white', 'text-blue-500');
+                showNotification('控制中心', '手电筒已开启');
+            } else {
+                icon.classList.add('bg-blue-500');
+                icon.classList.remove('bg-white', 'text-blue-500');
+            }
+        }
+
+        // 通知系统
+        function showNotification(title, body) {
+            const center = document.getElementById('notification-center');
+            const id = Date.now();
+            
+            const notif = document.createElement('div');
+            notif.className = 'notification-toast liquid-glass mx-4 mt-2 p-4 rounded-2xl pointer-events-auto cursor-pointer transform transition-all duration-300 hover:scale-102';
+            notif.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="font-semibold text-sm mb-1">${title}</div>
+                        <div class="text-sm text-white/80 line-clamp-2">${body}</div>
+                        <div class="text-xs text-white/50 mt-2">刚刚</div>
+                    </div>
+                </div>
+            `;
+            
+            notif.onclick = () => {
+                notif.style.transform = 'translateX(120%)';
+                setTimeout(() => notif.remove(), 300);
+            };
+            
+            center.appendChild(notif);
+            
+            setTimeout(() => {
+                if (notif.parentNode) {
+                    notif.style.opacity = '0';
+                    notif.style.transform = 'translateX(120%)';
+                    setTimeout(() => notif.remove(), 300);
+                }
+            }, 4000);
+        }
+
+        function updateTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('status-time').textContent = `${hours}:${minutes}`;
+        }
+
+        // 键盘支持
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (State.isControlOpen) closeControlCenter();
+                else if (State.currentView !== 'home') goHome();
+            }
+            if (e.key === ' ' && State.currentView === 'home') {
+                e.preventDefault();
+                openControlCenter();
+            }
+        });
+
+        // 初始化
+        init();
+    </script>
+</body>
+</html>
