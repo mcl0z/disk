@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>原生安卓仿真系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+--primary-color: #4285f4;
+--accent-color: #34a853;
+--text-primary: #202124;
+--text-secondary: #5f6368;
+--bg-primary: #ffffff;
+--bg-secondary: #f1f3f4;
+--bg-surface: #ffffff;
+--bg-overlay: rgba(255, 255, 255, 0.85);
+--elevation-1: 0 1px 2px rgba(60, 64, 67, 0.3), 0 1px 3px rgba(60, 64, 67, 0.15);
+--elevation-2: 0 1px 3px rgba(60, 64, 67, 0.3), 0 4px 8px rgba(60, 64, 67, 0.15);
+--elevation-3: 0 2px 6px rgba(60, 64, 67, 0.3), 0 8px 24px rgba(60, 64, 67, 0.15);
+--border-radius: 16px;
+--transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', 'Segoe UI', system-ui, sans-serif;
+-webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-image 1.5s ease-in-out;
+        }
+
+        /* 伪手机设备容器 */
+        .device {
+            width: 360px;
+            height: 740px;
+            background: #000;
+            border-radius: 36px;
+            box-shadow: var(--elevation-3), 0 0 0 4px rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            border: 14px solid #202124;
+        }
+
+        /* 状态栏 */
+        .status-bar {
+            height: 24px;
+            background: var(--bg-overlay);
+            backdrop-filter: blur(20px);
+-webkit-backdrop-filter: blur(20px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            font-size: 12px;
+            color: var(--text-primary);
+            font-weight: 500;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* 导航栏 */
+        .navigation-bar {
+            height: 60px;
+            background: var(--bg-overlay);
+            backdrop-filter: blur(20px);
+-webkit-backdrop-filter: blur(20px);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            position: relative;
+            z-index: 10;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-button {
+            width: 50px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 12px;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .nav-button:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        /* 液态玻璃效果 */
+        .liquid-glass {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(24px);
+-webkit-backdrop-filter: blur(24px);
+            z-index: 1;
+            opacity: 0.9;
+        }
+
+        /* 壁纸容器 */
+        .wallpaper-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            overflow: hidden;
+            transition: background-image 1.5s ease-in-out;
+        }
+
+        .wallpaper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 1s ease, filter 1s ease;
+            filter: brightness(1.1) saturate(1.1);
+        }
+
+        /* 桌面容器 */
+        .desktop {
+            position: absolute;
+            top: 24px;
+            left: 0;
+            width: 100%;
+            height: calc(100% - 84px);
+            overflow: hidden;
+            padding: 16px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-gap: 20px;
+            z-index: 2;
+        }
+
+        /* 应用图标 */
+        .app-icon {
+            width: 60px;
+            height: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: var(--transition);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .app-icon:active .icon-container {
+            transform: scale(0.92) translateY(2px);
+        }
+
+        .icon-container {
+            width: 56px;
+            height: 56px;
+            background: var(--bg-surface);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 8px;
+            box-shadow: var(--elevation-1);
+            transition: var(--transition);
+        }
+
+        .app-icon:hover .icon-container {
+            transform: translateY(-4px);
+            box-shadow: var(--elevation-2);
+        }
+
+        .app-icon i {
+            font-size: 24px;
+            color: var(--primary-color);
+        }
+
+        .app-name {
+            font-size: 12px;
+            font-weight: 500;
+            text-align: center;
+            color: var(--text-primary);
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+        }
+
+        /* 应用窗口 */
+        .app-window {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-surface);
+            border-radius: var(--border-radius);
+            box-shadow: var(--elevation-3);
+            z-index: 5;
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.2, 0, 0, 1);
+            display: none;
+            overflow: hidden;
+        }
+
+        .app-window.active {
+            transform: translateY(0);
+            display: block;
+        }
+
+        .app-header {
+            height: 56px;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            background: var(--bg-surface);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            position: relative;
+            z-index: 2;
+        }
+
+        .app-header .back-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 16px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .app-header .back-button:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .app-title {
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .app-content {
+            height: calc(100% - 56px);
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        /* 打断动画效果 */
+        .animation-container {
+            width: 100%;
+            height: 200px;
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .animated-box {
+            width: 80px;
+            height: 80px;
+            background: var(--primary-color);
+            border-radius: 16px;
+            position: absolute;
+            top: 60px;
+            left: 50px;
+            cursor: pointer;
+            transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1);
+        }
+
+        /* 情绪感知壁纸 */
+        .mood-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 24px;
+            padding: 0 10px;
+        }
+
+        .mood-option {
+            width: 50px;
+            height: 50px;
+            border-radius: 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background: var(--bg-secondary);
+            box-shadow: var(--elevation-1);
+        }
+
+        .mood-option:hover {
+            transform: scale(1.1);
+        }
+
+        /* 设置菜单 */
+        .menu-container {
+            background: var(--bg-surface);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--elevation-1);
+            margin-bottom: 16px;
+        }
+
+        .menu-item {
+            height: 56px;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            font-size: 16px;
+            color: var(--text-primary);
+            position: relative;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .menu-item:hover {
+            background: rgba(0, 0, 0, 0.03);
+        }
+
+        .menu-item i {
+            width: 24px;
+            margin-right: 24px;
+            color: var(--text-secondary);
+        }
+
+        .menu-item .arrow {
+            position: absolute;
+            right: 16px;
+            color: var(--text-secondary);
+        }
+
+        .submenu {
+            display: none;
+            background: var(--bg-secondary);
+            border-radius: 0 0 var(--border-radius) var(--border-radius);
+            overflow: hidden;
+        }
+
+        .submenu.active {
+            display: block;
+        }
+
+        .submenu-item {
+            height: 48px;
+            display: flex;
+            align-items: center;
+            padding: 0 16px 0 64px;
+            font-size: 14px;
+            color: var(--text-primary);
+            position: relative;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .submenu-item:hover {
+            background: rgba(0, 0, 0, 0.03);
+        }
+
+        .submenu-item .arrow {
+            position: absolute;
+            right: 16px;
+            color: var(--text-secondary);
+        }
+
+        /* 耳机设置菜单 */
+        .audio-settings {
+            background: var(--bg-surface);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--elevation-1);
+            margin-top: 24px;
+        }
+
+        .audio-header {
+            height: 56px;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-primary);
+            background: rgba(66, 133, 244, 0.1);
+        }
+
+        .audio-header i {
+            margin-right: 16px;
+        }
+
+        .audio-content {
+            padding: 16px;
+        }
+
+        .audio-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .audio-item:last-child {
+            border-bottom: none;
+        }
+
+        .audio-label {
+            flex: 1;
+            font-size: 16px;
+            color: var(--text-primary);
+        }
+
+        .switch {
+            position: relative;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        /* 涟漪交互效果 */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(0);
+            animation: ripple 0.6s linear;
+            pointer-events: none;
+        }
+
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* 通知面板 */
+        .notification-panel {
+            position: absolute;
+            top: 24px;
+            right: -300px;
+            width: 280px;
+            height: calc(100% - 84px);
+            background: var(--bg-overlay);
+            backdrop-filter: blur(30px);
+-webkit-backdrop-filter: blur(30px);
+            border-radius: var(--border-radius) 0 0 var(--border-radius);
+            box-shadow: var(--elevation-3);
+            padding: 16px;
+            z-index: 20;
+            transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1);
+        }
+
+        .notification-panel.active {
+            transform: translateX(-300px);
+        }
+    </style>
+</head>
+<body>
+    <!-- 伪手机设备 -->
+    <div class="device">
+        <div class="liquid-glass"></div>
+        
+        <!-- 动态壁纸 -->
+        <div class="wallpaper-container" id="wallpaper-container">
+            <img src="https://images.unsplash.com/photo-1493246507139-91e8fad9978e?auto=format&fit=crop&w=360&q=80" class="wallpaper" id="wallpaper">
+        </div>
+        
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <span>9:41</span>
+            <div>
+                <i class="fas fa-signal"></i>
+                <i class="fas fa-wifi" style="margin-left: 8px"></i>
+                <i class="fas fa-battery-three-quarters" style="margin-left: 8px"></i>
+            </div>
+        </div>
+        
+        <!-- 桌面应用图标 -->
+        <div class="desktop" id="desktop">
+            <div class="app-icon" data-app="settings">
+                <div class="icon-container">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <span class="app-name">设置</span>
+            </div>
+            
+            <div class="app-icon" data-app="messages">
+                <div class="icon-container">
+                    <i class="fas fa-comment-alt"></i>
+                </div>
+                <span class="app-name">信息</span>
+            </div>
+            
+            <div class="app-icon" data-app="phone">
+                <div class="icon-container">
+                    <i class="fas fa-phone-alt"></i>
+                </div>
+                <span class="app-name">电话</span>
+            </div>
+            
+            <div class="app-icon" data-app="camera">
+                <div class="icon-container">
+                    <i class="fas fa-camera"></i>
+                </div>
+                <span class="app-name">相机</span>
+            </div>
+            
+            <div class="app-icon" data-app="gallery">
+                <div class="icon-container">
+                    <i class="fas fa-images"></i>
+                </div>
+                <span class="app-name">相册</span>
+            </div>
+            
+            <div class="app-icon" data-app="music">
+                <div class="icon-container">
+                    <i class="fas fa-music"></i>
+                </div>
+                <span class="app-name">音乐</span>
+            </div>
+            
+            <div class="app-icon" data-app="browser">
+                <div class="icon-container">
+                    <i class="fas fa-compass"></i>
+                </div>
+                <span class="app-name">浏览器</span>
+            </div>
+            
+            <div class="app-icon" data-app="calendar">
+                <div class="icon-container">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <span class="app-name">日历</span>
+            </div>
+            
+            <div class="app-icon" data-app="maps">
+                <div class="icon-container">
+                    <i class="fas fa-map-marker-alt"></i>
+                </div>
+                <span class="app-name">地图</span>
+            </div>
+            
+            <div class="app-icon" data-app="email">
+                <div class="icon-container">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <span class="app-name">邮件</span>
+            </div>
+            
+            <div class="app-icon" data-app="clock">
+                <div class="icon-container">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <span class="app-name">时钟</span>
+            </div>
+            
+            <div class="app-icon" data-app="files">
+                <div class="icon-container">
+                    <i class="fas fa-file"></i>
+                </div>
+                <span class="app-name">文件</span>
+            </div>
+        </div>
+        
+        <!-- 导航栏 -->
+        <div class="navigation-bar">
+            <div class="nav-button" id="back-button">
+                <i class="fas fa-arrow-left"></i>
+            </div>
+            <div class="nav-button" id="home-button">
+                <i class="fas fa-home"></i>
+            </div>
+            <div class="nav-button" id="recents-button">
+                <i class="fas fa-square"></i>
+            </div>
+            <div class="nav-button" id="notifications-button">
+                <i class="fas fa-bell"></i>
+            </div>
+        </div>
+        
+        <!-- 设置应用窗口 -->
+        <div class="app-window" id="settings-app">
+            <div class="app-header">
+                <div class="back-button" id="settings-back">
+                    <i class="fas fa-arrow-left"></i>
+                </div>
+                <div class="app-title">设置</div>
+            </div>
+            <div class="app-content">
+                <!-- 情绪感知壁纸控制 -->
+                <h3 style="margin-bottom: 16px; color: var(--text-primary);">情绪感知壁纸</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 16px;">系统会根据您当前的情绪自动调整壁纸</p>
+                <div class="mood-indicator">
+                    <div class="mood-option" data-mood="calm">
+                        <i class="fas fa-spa"></i>
+                    </div>
+                    <div class="mood-option" data-mood="happy">
+                        <i class="fas fa-smile"></i>
+                    </div>
+                    <div class="mood-option" data-mood="energetic">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <div class="mood-option" data-mood="creative">
+                        <i class="fas fa-palette"></i>
+                    </div>
+                </div>
+                
+                <!-- 打断动画演示 -->
+                <h3 style="margin: 32px 0 16px; color: var(--text-primary);">打断动画演示</h3>
+                <div class="animation-container" id="animation-container">
+                    <div class="animated-box" id="animated-box"></div>
+                </div>
+                <p style="color: var(--text-secondary);">点击方块体验流畅的打断动画效果</p>
+                
+                <!-- 耳机设置 -->
+                <div class="audio-settings">
+                    <div class="audio-header">
+                        <i class="fas fa-headphones"></i>
+                        <span>耳机设置</span>
+                    </div>
+                    <div class="audio-content">
+                        <div class="audio-item">
+                            <div class="audio-label">自动暂停检测</div>
+                            <label class="switch">
+                                <input type="checkbox" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="audio-item">
+                            <div class="audio-label">空间音频</div>
+                            <label class="switch">
+                                <input type="checkbox">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="audio-item">
+                            <div class="audio-label">对话增强</div>
+                            <label class="switch">
+                                <input type="checkbox" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="audio-item">
+                            <div class="audio-label">个性化音频</div>
+                            <label class="switch">
+                                <input type="checkbox">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 三级菜单展示 -->
+                <h3 style="margin: 32px 0 16px; color: var(--text-primary);">设备设置</h3>
+                <div class="menu-container">
+                    <div class="menu-item" id="wireless-menu">
+                        <i class="fas fa-wifi"></i>
+                        <span>网络和互联网</span>
+                        <i class="fas fa-chevron-right arrow"></i>
+                    </div>
+                    <div class="submenu" id="wireless-submenu">
+                        <div class="submenu-item">
+                            <span>Wi-Fi</span>
+                        </div>
+                        <div class="submenu-item">
+                            <span>移动网络</span>
+                        </div>
+                        <div class="submenu-item">
+                            <span>热点和网络共享</span>
+                        </div>
+                        <div class="submenu-item">
+                            <span>VPN</span>
+                        </div>
+                    </div>
+                    
+                    <div class="menu-item" id="device-menu">
+                        <i class="fas fa-mobile-alt"></i>
+                        <span>设备</span>
+                        <i class="fas fa-chevron-right arrow"></i>
+                    </div>
+                    <div class="submenu" id="device-submenu">
+                        <div class="submenu-item">
+                            <span>显示</span>
+                        </div>
+                        <div class="submenu-item" id="sound-submenu-trigger">
+                            <span>声音</span>
+                            <i class="fas fa-chevron-right arrow"></i>
+                        </div>
+                        <div class="submenu-item">
+                            <span>通知</span>
+                        </div>
+                        <div class="submenu-item">
+                            <span>存储</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 通知面板 -->
+        <div class="notification-panel" id="notification-panel">
+            <h3 style="margin-bottom: 16px; color: var(--text-primary);">通知</h3>
+            <div style="background: rgba(255, 255, 255, 0.7); border-radius: 16px; padding: 12px; margin-bottom: 12px;">
+                <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                    <div style="width: 40px; height: 40px; background: var(--primary-color); border-radius: 20px; display: flex; justify-content: center; align-items: center; margin-right: 12px;">
+                        <i class="fas fa-message" style="color: white;"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight: 500;">新消息</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">来自 张经理</div>
+                    </div>
+                </div>
+                <p style="font-size: 14px; color: var(--text-primary);">项目会议安排在明天下午2点，请准备好演示材料...</p>
+            </div>
+            
+            <div style="background: rgba(255, 255, 255, 0.7); border-radius: 16px; padding: 12px; margin-bottom: 12px;">
+                <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                    <div style="width: 40px; height: 40px; background: var(--accent-color); border-radius: 20px; display: flex; justify-content: center; align-items: center; margin-right: 12px;">
+                        <i class="fas fa-music" style="color: white;"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight: 500;">音乐推荐</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">基于您的偏好</div>
+                    </div>
+                </div>
+                <p style="font-size: 14px; color: var(--text-primary);">发现新专辑：夏日精选 - 点击试听</p>
+            </div>
+            
+            <div style="background: rgba(255, 255, 255, 0.7); border-radius: 16px; padding: 12px;">
+                <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                    <div style="width: 40px; height: 40px; background: #fbbc05; border-radius: 20px; display: flex; justify-content: center; align-items: center; margin-right: 12px;">
+                        <i class="fas fa-calendar-day" style="color: white;"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight: 500;">日程提醒</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">今天 15:00</div>
+                    </div>
+                </div>
+                <p style="font-size: 14px; color: var(--text-primary);">团队周会 - 会议室B</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 液态玻璃效果增强
+        document.querySelector('.liquid-glass').addEventListener('mousemove', (e) => {
+            const glass = document.querySelector('.liquid-glass');
+            const x = (e.clientX / window.innerWidth) * 100;
+            const y = (e.clientY / window.innerHeight) * 100;
+            glass.style.background = `radial-gradient(circle at ${x}% ${y}%, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05))`;
+        });
+
+        // 涟漪交互效果
+        document.querySelectorAll('.app-icon, .menu-item, .submenu-item, .nav-button, .animated-box').forEach(element => {
+            element.addEventListener('click', function(e) {
+                const rect = this.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const ripple = document.createElement('span');
+                ripple.classList.add('ripple');
+                ripple.style.left = x + 'px';
+                ripple.style.top = y + 'px';
+                
+                this.appendChild(ripple);
+                
+                setTimeout(() => {
+                    ripple.remove();
+                }, 600);
+            });
+        });
+
+        // 情绪感知壁纸系统
+        const moodOptions = document.querySelectorAll('.mood-option');
+        const wallpaper = document.getElementById('wallpaper');
+        
+        const wallpapers = {
+            calm: 'https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?auto=format&fit=crop&w=360&q=80',
+            happy: 'https://images.unsplash.com/photo-1476820865390-c52aeebb9891?auto=format&fit=crop&w=360&q=80',
+            energetic: 'https://images.unsplash.com/photo-1593062096033-9c26abeca36f?auto=format&fit=crop&w=360&q=80',
+            creative: 'https://images.unsplash.com/photo-1505506874110-6a7a69069a08?auto=format&fit=crop&w=360&q=80'
+        };
+        
+        moodOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                const mood = this.getAttribute('data-mood');
+                wallpaper.src = wallpapers[mood];
+                
+                // 动画效果
+                wallpaper.style.transform = 'scale(1.1)';
+                setTimeout(() => {
+                    wallpaper.style.transform = 'scale(1)';
+                }, 1000);
+            });
+        });
+
+        // 打断动画效果
+        const animatedBox = document.getElementById('animated-box');
+        let animation;
+        
+        function startAnimation() {
+            let position = 50;
+            let direction = 1;
+            
+            animation = setInterval(() => {
+                position += 2 * direction;
+                animatedBox.style.left = position + 'px';
+                
+                if (position > 230 || position < 50) {
+                    direction *= -1;
+                }
+            }, 20);
+        }
+        
+        animatedBox.addEventListener('click', function() {
+            // 打断现有的动画
+            if (animation) clearInterval(animation);
+            
+            // 快速缩放动画
+            this.style.transition = 'transform 0.2s ease';
+            this.style.transform = 'scale(0.8)';
+            
+            setTimeout(() => {
+                this.style.transform = 'scale(1)';
+                
+                // 重新开始动画
+                startAnimation();
+            }, 200);
+        });
+        
+        // 启动初始动画
+        startAnimation();
+
+        // 应用打开效果
+        const appIcons = document.querySelectorAll('.app-icon');
+        const appWindows = document.querySelectorAll('.app-window');
+        const homeButton = document.getElementById('home-button');
+        const backButton = document.getElementById('back-button');
+        const settingsBack = document.getElementById('settings-back');
+        const notificationsButton = document.getElementById('notifications-button');
+        const notificationPanel = document.getElementById('notification-panel');
+        
+        appIcons.forEach(icon => {
+            icon.addEventListener('click', function() {
+                const app = this.getAttribute('data-app');
+                
+                if (app === 'settings') {
+                    document.getElementById('settings-app').classList.add('active');
+                }
+            });
+        });
+        
+        // 返回主页功能
+        homeButton.addEventListener('click', function() {
+            appWindows.forEach(window => {
+                window.classList.remove('active');
+            });
+            notificationPanel.classList.remove('active');
+        });
+        
+        // 返回按钮功能
+        backButton.addEventListener('click', function() {
+            appWindows.forEach(window => {
+                window.classList.remove('active');
+            });
+        });
+        
+        settingsBack.addEventListener('click', function() {
+            document.getElementById('settings-app').classList.remove('active');
+        });
+        
+        // 通知面板
+        notificationsButton.addEventListener('click', function() {
+            notificationPanel.classList.toggle('active');
+        });
+        
+        // 三级菜单交互
+        const menuItems = document.querySelectorAll('.menu-item');
+        
+        menuItems.forEach(item => {
+            item.addEventListener('click', function() {
+                // 在真实系统中，这里会跳转到新页面，这里用二级菜单模拟
+                const targetId = this.id.replace('-menu', '-submenu');
+                const submenu = document.getElementById(targetId);
+                
+                submenu.classList.toggle('active');
+                
+                // 旋转箭头
+                const arrow = this.querySelector('.arrow');
+                if (submenu.classList.contains('active')) {
+                    arrow.style.transform = 'rotate(90deg)';
+                } else {
+                    arrow.style.transform = 'rotate(0deg)';
+                }
+            });
+        });
+        
+        // 动态壁纸效果
+        let wallCounter = 0;
+        const wallpapersArray = [
+            'https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?auto=format&fit=crop&w=360&q=80',
+            'https://images.unsplash.com/photo-1476820865390-c52aeebb9891?auto=format&fit=crop&w=360&q=80',
+            'https://images.unsplash.com/photo-1593062096033-9c26abeca36f?auto=format&fit=crop&w=360&q=80',
+            'https://images.unsplash.com/photo-1505506874110-6a7a69069a08?auto=format&fit=crop&w=360&q=80'
+        ];
+        
+        function changeWallpaper() {
+            wallpaper.style.opacity = 0;
+            
+            setTimeout(() => {
+                wallpaper.src = wallpapersArray[wallCounter];
+                wallCounter = (wallCounter + 1) % wallpapersArray.length;
+                wallpaper.style.opacity = 1;
+            }, 1000);
+        }
+        
+        // 每30秒更换一次壁纸
+        setInterval(changeWallpaper, 30000);
+        
+        // 初始化壁纸
+        wallpaper.src = wallpapersArray[0];
+    </script>
+</body>
+</html>
