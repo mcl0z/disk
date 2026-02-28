@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>待办APP · 多用户版</title>
+<style>
+:root {
+  --bg: #f5f7fa;
+  --card: #fff;
+  --text: #222;
+  --text2: #666;
+  --text3: #999;
+  --border: #e4e7ed;
+  --primary: #4e6af5;
+  --warn: #ff4d4f;
+  --coin: #f5a232;
+  --success: #4cd964;
+}
+[data-theme="dark"] {
+  --bg: #121118;
+  --card: #1e1e2f;
+  --text: #f0f0f5;
+  --text2: #ccc;
+  --text3: #888;
+  --border: #333;
+  --primary: #6b8ff0;
+  --warn: #ff4d4f;
+  --coin: #ffc14d;
+  --success: #4cd964;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI";
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  padding-bottom: 0 !important;
+  transition: all 0.2s;
+}
+.container {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 20px;
+}
+h1 {
+  text-align: center;
+  margin: 20px 0;
+  color: var(--text);
+  font-size: 24px;
+  font-weight: 600;
+}
+
+/* 登录页面 */
+.login-box {
+  margin-top: 80px;
+  padding: 30px;
+}
+.login-title {
+  font-size: 28px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 40px;
+}
+.login-input {
+  width: 100%;
+  padding: 16px;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font-size: 16px;
+}
+.login-btn {
+  width: 100%;
+  padding: 16px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+/* 弹窗 */
+.modal {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: none; justify-content: center; align-items: center;
+  z-index: 999;
+}
+.modal-box {
+  background: var(--card); width: 320px; padding: 30px; border-radius: 16px; text-align: center;
+}
+.modal-title {
+  font-size: 18px; margin-bottom: 20px;
+}
+.modal-input {
+  width: 100%;
+  padding: 14px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 16px;
+}
+.modal-btn {
+  padding: 12px 30px; background: var(--primary); color: #fff; border: none; border-radius: 10px; cursor: pointer;
+}
+
+/* 原有样式 */
+.input-box {
+  display: flex; gap: 8px; margin-bottom: 20px;
+}
+input {
+  flex: 1; padding: 14px 16px; border: 1px solid var(--border); border-radius: 12px;
+  outline: none; font-size: 16px; background: var(--card); color: var(--text);
+}
+button {
+  padding: 14px 18px; background: var(--primary); color: #fff; border: none; border-radius: 12px; cursor: pointer; font-size: 15px;
+}
+.task {
+  background: var(--card); padding: 16px; border-radius: 12px; margin-bottom: 10px;
+  display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.del {
+  color: var(--warn); background: none; border: none; cursor: pointer; font-size: 15px;
+}
+.me-box {
+  margin-top: 30px; padding: 0 10px; display: flex; flex-direction: column; gap: 12px;
+}
+.me-btn {
+  width: 100%; padding: 16px; background: var(--card); color: var(--primary);
+  border: 1px solid var(--border); border-radius: 14px; font-size: 16px; font-weight: 500;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.trash-item {
+  background: var(--card); padding: 14px 16px; border-radius: 12px; margin-bottom: 8px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.trash-btn {
+  display: flex; gap: 10px;
+}
+.restore {
+  padding: 8px 12px; background: #eef2ff; color: var(--primary); border: none; border-radius: 8px; cursor: pointer;
+}
+[data-theme="dark"] .restore { background: #2a2d3a; }
+.force-del {
+  padding: 8px 12px; background: #fff1f0; color: var(--warn); border: none; border-radius: 8px; cursor: pointer;
+}
+[data-theme="dark"] .force-del { background: #3a2626; }
+.coin-box {
+  text-align: center; margin: 40px 0;
+}
+.coin-num {
+  font-size: 48px; font-weight: bold; color: var(--coin);
+}
+.coin-desc {
+  font-size: 16px; color: var(--text2); margin-top: 10px;
+}
+.to-detail {
+  margin-top: 10px; padding: 12px 24px; background: var(--card); color: var(--primary);
+  border: 1px solid var(--border); border-radius: 12px; cursor: pointer;
+}
+.detail-item {
+  background: var(--card); padding: 14px 16px; border-radius: 12px; margin-bottom: 8px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.detail-name { color: var(--text); }
+.detail-time { color: var(--text3); font-size: 12px; margin-top: 4px; }
+.detail-add { color: var(--success); }
+.detail-cost { color: var(--warn); }
+.daily-item {
+  background: var(--card); padding: 16px; border-radius: 12px; margin-bottom: 10px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.daily-text { font-size: 16px; color: var(--text); }
+.daily-reward { color: var(--coin); font-size: 14px; }
+.daily-btn {
+  padding: 8px 14px; background: var(--primary); color: #fff; border: none; border-radius: 8px; cursor: pointer;
+}
+.daily-btn.done { background: #ccc; color: #fff; }
+.daily-btn.disabled { background: var(--border); color: var(--text3); cursor: not-allowed; }
+.back {
+  margin: 10px 0 20px; padding: 10px 14px; background: none; color: var(--primary);
+  border: none; border-radius: 10px; cursor: pointer; font-size: 15px;
+}
+.set-item {
+  background: var(--card); padding: 16px; border-radius: 14px; margin-bottom: 12px;
+  display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border);
+  cursor: pointer;
+}
+.set-text { font-size: 16px; color: var(--text); }
+.switch {
+  width: 44px; height: 24px; border-radius: 12px; background: var(--border);
+  position: relative; cursor: pointer; transition: all 0.2s;
+}
+.switch::after {
+  content: ''; position: absolute; width: 20px; height: 20px; border-radius: 50%;
+  background: #fff; top: 2px; left: 2px; transition: 0.2s;
+}
+.switch.on { background: var(--primary); }
+.switch.on::after { left: 22px; }
+.about-box {
+  text-align: center; margin-top: 40px;
+}
+.about-logo { font-size: 50px; margin-bottom: 10px; }
+.about-title { font-size: 20px; font-weight: bold; margin-bottom: 6px; }
+.about-version { color: var(--text3); font-size: 14px; margin-bottom: 30px; }
+.about-desc {
+  color: var(--text2); font-size: 15px; line-height: 1.6; padding: 0 20px;
+}
+
+.nav {
+  position: fixed; bottom: 0; left: 0; right: 0; height: 60px;
+  background: var(--card); display: none; align-items: center; justify-content: space-around;
+  border-top: 1px solid var(--border); max-width: 480px; margin: 0 auto;
+}
+.nav-item {
+  color: var(--text2); font-size: 16px; cursor: pointer; font-weight: 500;
+}
+.nav-item.active { color: var(--primary); }
+.page { display: none; }
+.page.active { display: block; }
+</style>
+</head>
+
+<body>
+
+<!-- 统一弹窗 -->
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <div class="modal-title" id="modalTitle">标题</div>
+    <input id="modalInput1" class="modal-input" type="password" placeholder="">
+    <input id="modalInput2" class="modal-input" type="password" placeholder="">
+    <button class="modal-btn" onclick="modalConfirm()">确认</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- 登录 -->
+  <div id="page-login" class="page active">
+    <div class="login-box">
+      <div class="login-title">登录</div>
+      <input id="username" class="login-input" placeholder="请输入用户名" type="text">
+      <input id="password" class="login-input" placeholder="请输入密码" type="password">
+      <button class="login-btn" onclick="login()">登录</button>
+    </div>
+  </div>
+
+  <div id="page-todo" class="page">
+    <h1>待办清单</h1>
+    <div class="input-box">
+      <input type="text" id="taskInput" placeholder="输入新任务..." />
+      <button onclick="addTask()">添加</button>
+    </div>
+    <div id="taskList"></div>
+  </div>
+
+  <div id="page-me" class="page">
+    <h1>我的</h1>
+    <div class="me-box">
+      <button class="me-btn" onclick="goDaily()">📅 每日任务</button>
+      <button class="me-btn" onclick="goCoin()">💰 我的回币</button>
+      <button class="me-btn" onclick="goTrash()">🗑️ 回收站</button>
+      <button class="me-btn" onclick="goSetting()">⚙️ 设置</button>
+      <button class="me-btn" onclick="logout()" style="background:var(--warn);color:#fff;">退出登录</button>
+    </div>
+  </div>
+
+  <div id="page-daily" class="page">
+    <h1>每日任务</h1>
+    <button class="back" onclick="goPage('me')">← 返回我的</button>
+    <div id="dailyList"></div>
+  </div>
+
+  <div id="page-trash" class="page">
+    <h1>回收站</h1>
+    <button class="back" onclick="goPage('me')">← 返回我的</button>
+    <div id="trashList"></div>
+  </div>
+
+  <div id="page-coin" class="page">
+    <h1>我的回币</h1>
+    <button class="back" onclick="goPage('me')">← 返回我的</button>
+    <div class="coin-box">
+      <div class="coin-num" id="coinNum">0</div>
+      <div class="coin-desc">当前回币数量</div>
+      <button class="to-detail" onclick="goCoinDetail()">📝 回币明细</button>
+      <button class="to-detail" onclick="openChangePayPwd()" style="background:var(--coin);margin-top:10px;">修改支付密码</button>
+    </div>
+  </div>
+
+  <div id="page-coin-detail" class="page">
+    <h1>回币明细</h1>
+    <button class="back" onclick="goCoin()">← 返回我的回币</button>
+    <div id="coinDetailList"></div>
+  </div>
+
+  <div id="page-setting" class="page">
+    <h1>设置</h1>
+    <button class="back" onclick="goPage('me')">← 返回我的</button>
+    
+    <div class="set-item" onclick="toggleTheme()">
+      <span class="set-text">🌙 深色模式</span>
+      <div id="themeToggle" class="switch"></div>
+    </div>
+
+    <div class="set-item" onclick="openChangeLoginPwd()">
+      <span class="set-text">🔐 修改登录密码</span>
+    </div>
+
+    <div class="set-item" onclick="goAbout()">
+      <span class="set-text">ℹ️ 关于应用</span>
+    </div>
+  </div>
+
+  <div id="page-about" class="page">
+    <h1>关于</h1>
+    <button class="back" onclick="goSetting()">← 返回设置</button>
+    <div class="about-box">
+      <div class="about-logo">✅</div>
+      <div class="about-title">待办</div>
+      <div class="about-version">版本 v1.1</div>
+      <div class="about-desc">
+        简洁好用的待办任务工具<br>支持多用户、
