@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>伪系统</title>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent !important;
+    outline: none !important;
+  }
+  body {
+    font-family: sans-serif;
+    background: #000;
+    color: #fff;
+    overflow: hidden;
+    height: 100vh;
+    transition: filter 0.6s ease;
+  }
+
+  .ripple {
+    position: absolute;
+    border-radius: 50%;
+    transform: scale(0);
+    opacity: 1;
+    transition: transform 0.5s ease, opacity 0.4s ease;
+    pointer-events: none;
+    z-index: 9999 !important;
+  }
+
+  #unlock, .nav-btn, .item, .app-item, .modal-btn, .dark-switch, .dev-switch, .web-btn, .nav-item {
+    position: relative !important;
+    overflow: hidden !important;
+  }
+
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 70px;
+    transform: translateX(-50%) translateY(20px);
+    padding: 8px 16px;
+    border-radius: 6px;
+    background: rgba(60,60,60,0.9);
+    color: #fff;
+    font-size: 14px;
+    white-space: nowrap;
+    opacity: 0;
+    z-index: 99999;
+    transition: all 0.3s ease;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  .dark-mode .toast {
+    background: rgba(220,220,220,0.9);
+    color: #000;
+  }
+
+  .status-bar {
+    height: 30px;
+    font-size: 14px;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 10px;
+    z-index: 9998;
+    position: relative;
+    align-items: center;
+  }
+
+  #lock {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #fca6e8 0%, #e0a8f7 50%, #b379f5 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    transition: transform 0.6s, opacity 0.6s;
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  #lock.show {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  #time {
+    font-size: 48px;
+    margin-bottom: 10px;
+  }
+  #date {
+    font-size: 18px;
+    opacity: 0.9;
+    margin-bottom: 60px;
+  }
+  #unlock {
+    padding: 12px 30px;
+    background: rgba(255,255,255,0.25);
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 30px;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  #desktop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #fca6e8 0%, #e0a8f7 50%, #b379f5 100%);
+    padding: 10px 10px 80px 10px;
+    z-index: 1;
+  }
+
+  #lockBtn {
+    position: absolute !important;
+    bottom: 60px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    background: #cccccc;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 9999 !important;
+    overflow: hidden;
+  }
+  .lock-icon {
+    position: relative;
+    width: 24px;
+    height: 24px;
+    margin-bottom: 4px;
+  }
+  .lock-body {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 18px;
+    height: 14px;
+    background: #000;
+    border-radius: 3px;
+  }
+  .lock-ring {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 18px;
+    height: 9px;
+    border: 2px solid #000;
+    border-bottom: none;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    background: transparent;
+  }
+  .lock-text {
+    font-size: 10px;
+    color: #000;
+    font-weight: 500;
+  }
+
+  #appDrawer {
+    position: fixed;
+    left: 0;
+    top: 30px;
+    width: 100%;
+    height: calc(100% - 30px);
+    background: #fff;
+    z-index: 6;
+    transition: transform 0.6s, opacity 0.6s;
+    transform: translateY(100%);
+    opacity: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    padding: 20px 15px;
+    overflow-y: auto;
+  }
+  #appDrawer.show {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  .app-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    border-radius: 8px;
+  }
+
+  .settings-icon {
+    width: 60px;
+    height: 60px;
+    background: #005522;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    font-size: 24px;
+    color: #fff;
+  }
+  .settings-label {
+    position: absolute;
+    bottom: 4px;
+    font-size: 9px;
+    color: #fff;
+    font-weight: 500;
+  }
+
+  .web-icon {
+    width: 60px;
+    height: 60px;
+    background: #165DFF;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    font-size: 24px;
+    color: #fff;
+  }
+  .web-label {
+    position: absolute;
+    bottom: 4px;
+    font-size: 9px;
+    color: #fff;
+    font-weight: 500;
+  }
+
+  .app-name {
+    font-size: 12px;
+    color: #000;
+    font-weight: 500;
+    text-align: center;
+  }
+
+  .nav-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 50px;
+    background: #000;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 40px;
+    z-index: 9998;
+  }
+  .nav-btn {
+    border: none;
+    background: transparent;
+    width: 70px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: background 0.3s ease;
+  }
+  .nav-btn:active {
+    background: rgba(255, 255, 255, 0.35);
+  }
+.menu-btn {
+    width: 14px;
+    height: 14px;
+    background: #fff;
+    border-radius: 3px;
+  }
+  .home-btn {
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    border-radius: 50%;
+  }
+  .back-btn {
+    width: 0;
+    height: 0;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    border-right: 10px solid #fff;
+  }
+
+  .page {
+    position: fixed;
+    left: 0;
+    top: 30px;
+    width: 100%;
+    height: calc(100% - 30px);
+    background: #fff;
+    z-index: 100;
+    transition: transform 0.6s ease;
+    transform: translateX(100%);
+    overflow-y: auto; /* 修复：允许页面垂直滚动 */
+  }
+  .page.from-bottom {
+    transform: translateY(100%);
+  }
+  .page.from-right {
+    transform: translateX(100%);
+  }
+  .page.show {
+    transform: translate(0, 0) !important;
+  }
+
+  .page-title {
+    width: 100%;
+    height: 50px;
+    background: #005522;
+    color: #fff;
+    font-size: 20px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    padding: 0 15px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .list {
+    padding: 10px 0;
+  }
+
+  .item {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    position: relative !important;
+  }
+  .item-title {
+    font-size: 16px;
+    color: #000;
+    margin-bottom: 4px;
+  }
+  .item-sub {
+    font-size: 12px;
+    color: #888;
+    line-height: 1.4;
+  }
+
+  .dark-switch, .dev-switch {
+    position: absolute !important;
+    right: 15px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 40px;
+    height: 24px;
+    background: #ccc;
+    border-radius: 12px;
+    transition: background 0.6s;
+    cursor: pointer;
+  }
+  .dark-switch::after, .dev-switch::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    left: 2px;
+    top: 2px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.6s;
+  }
+  .dark-switch.on, .dev-switch.on {
+    background: #005522;
+  }
+  .dark-switch.on::after, .dev-switch.on::after {
+    transform: translateX(16px);
+  }
+
+  .brightness-wrap {
+    padding: 30px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  #brightnessSlider {
+    flex: 1;
+    height: 6px;
+    -webkit-appearance: none;
+    background: #ddd;
+    border-radius: 3px;
+  }
+  #brightnessSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #005522;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  .brightness-num {
+    font-size: 14px;
+    color: #000;
+    min-width: 30px;
+    text-align: right;
+  }
+
+  .modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.6s ease, visibility 0.6s;
+  }
+  .modal.show {
+    opacity: 1;
+    visibility: visible;
+  }
+  .modal-box {
+    width: 280px;
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    transform: scale(0.8);
+    transition: transform 0.6s cubic-bezier(0.25,1,0.5,1);
+  }
+  .modal.show .modal-box {
+    transform: scale(1);
+  }
+  .modal-title {
+    font-size: 18px;
+    color: #005522;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+  .modal-desc {
+    font-size: 14px;
+    color:  #333;
+    margin-bottom: 20px;
+  }
+  .modal-btns {
+    display: flex;
+    gap: 10px;
+  }
+  .modal-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  .btn-cancel {
+    background: #eee;
+    color: #000;
+  }
+  .btn-ok {
+    background: #005522;
+    color: #fff;
+  }
+
+  #imgPicker, #zipPicker {
+    display: none;
+  }
+
+  /* 网页应用样式 */
+  .web-page-content {
+    padding: 20px;
+  }
+  .web-btn {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 15px;
+    background: #f5f5f5;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    font-size: 16px;
+    color: #000;
+    text-align: center;
+    cursor: pointer;
+  }
+  .dark-mode .web-btn {
+    background: #333;
+    border-color: #444;
+    color: #fff;
+  }
+  .web-input-wrap {
+    margin: 20px 0;
+  }
+  #webUrlInput {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    background: #fff;
+    color: #000;
+    user-select: text !important;
+    -webkit-user-select: text !important;
+  }
+  .dark-mode #webUrlInput {
+    background: #333;
+    border-color: #555;
+    color: #fff;
+  }
+  .nav-list {
+    padding: 10px 20px;
+  }
+  .nav-item {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+    font-size: 15px;
+    color: #000;
+    cursor: pointer;
+  }
+  .dark-mode .nav-item {
+    border-bottom-color: #444;
+    color: #fff;
+  }
+
+/* 深色模式 */
+  .dark-mode .page { background: #1c1c1e; }
+  .dark-mode .item { background: #1c1c1e; border-bottom-color: #333; }
+  .dark-mode .item-title { color: #fff; }
+  .dark-mode .item-sub { color: #aaa; }
+  .dark-mode .brightness-num { color: #fff; }
+  .dark-mode .modal-box { background: #2c2c2e; }
+  .dark-mode .modal-title,.dark-mode .modal-desc { color: #fff; }
+  .dark-mode .btn-cancel { background: #444; color: #fff; }
+  .dark-mode .app-name { color: #fff; }
+  .dark-mode #appDrawer { color: #fff; }
+</style>
+</head>
+<body>
+<!-- 提示条 -->
+<div class="toast" id="toast"></div>
+
+<!-- 锁屏 -->
+<div id="lock">
+  <div id="time">00:00</div>
+  <div id="date">2025年1月1日 星期三</div>
+  <button id="unlock">点击解锁</button>
+</div>
+
+<!-- 桌面 -->
+<div id="desktop">
+  <div class="status-bar">
+    <span id="status-left">00:00</span>
+    <span id="desktop-time">00:00</span>
+  </div>
+  <div id="lockBtn">
+    <div class="lock-icon">
+      <div class="lock-ring"></div>
+      <div class="lock-body"></div>
+    </div>
+    <div class="lock-text">Lock</div>
+  </div>
+</div>
+
+<!-- 应用抽屉 -->
+<div id="appDrawer">
+  <div class="app-item" id="openWeb">
+    <div class="web-icon">
+      🌏
+      <div class="web-label">Web</div>
+    </div>
+    <div class="app-name">网页</div>
+  </div>
+
+  <div class="app-item" id="openSettings">
+    <div class="settings-icon">
+      ⚙️
+      <div class="settings-label">Settings</div>
+    </div>
+    <div class="app-name">设置</div>
+  </div>
+</div>
+
+<!-- 设置主页面 -->
+<div class="page" id="settingsPage">
+  <div class="page-title">设置</div>
+  <div class="list">
+    <div class="item" id="gotoDisplay">
+      <div class="item-title">显示与亮度</div>
+      <div class="item-sub">亮度，背景壁纸</div>
+    </div>
+    <div class="item" id="gotoCustom">
+      <div class="item-title">个性化</div>
+      <div class="item-sub">自定义样式</div>
+    </div>
+    <div class="item" id="gotoAbout">
+      <div class="item-title">关于</div>
+      <div class="item-sub">版本信息</div>
+    </div>
+    <div class="item" id="gotoDevOptions" style="display:none;">
+      <div class="item-title">开发选项</div>
+      <div class="item-sub">开发者功能</div>
+    </div>
+  </div>
+</div>
+
+<!-- 显示与亮度 -->
+<div class="page" id="displayPage">
+  <div class="page-title">显示与亮度</div>
+  <div class="list">
+    <div class="item" id="gotoBrightness">
+      <div class="item-title">亮度调节</div>
+    </div>
+    <div class="item" id="darkModeItem">
+      <div class="item-title">深色模式</div>
+      <div class="dark-switch" id="darkSwitch"></div>
+    </div>
+    <div class="item" id="gotoWallpaper">
+      <div class="item-title">设置壁纸</div>
+    </div>
+  </div>
+</div>
+
+<!-- 亮度调节 -->
+<div class="page" id="brightnessPage">
+  <div class="page-title">亮度调节</div>
+  <div class="brightness-wrap">
+    <span id="brightMin">50</span>
+    <input type="range" id="brightnessSlider" min="50" max="100" value="100">
+    <span class="brightness-num">100</span>
+  </div>
+</div>
+
+<!-- 壁纸 -->
+<div class="page" id="wallpaperPage">
+  <div class="page-title">设置壁纸</div>
+  <div class="list">
+    <div class="item" data-target="lock">
+      <div class="item-title">锁屏壁纸</div>
+    </div>
+    <div class="item" data-target="desktop">
+      <div class="item-title">桌面壁纸</div>
+    </div>
+    <div class="item" data-target="drawer">
+      <div class="item-title">抽屉壁纸</div>
+    </div>
+    <div class="item" id="resetWallpaper">
+      <div class="item-title">重置壁纸</div>
+    </div>
+  </div>
+</div>
+
+<!-- 个性化 -->
+<div class="page" id="customPage">
+  <div class="page-title">个性化</div>
+  <div style="padding:20px;color:#666;text-align:center;font-size:14px;margin-top:50px;">
+    暂无自定义内容
+  </div>
+</div>
+
+<!-- 关于 -->
+<div class="page" id="aboutPage">
+  <div class="page-title">关于</div>
+  <div class="list">
+    <div class="item" id="gotoVersion">
+      <div class="item-title">版本信息</div>
+    </div>
+    <div class="item" id="gotoBackup">
+      <div class="item-title">备份与重置</div>
+    </div>
+  </div>
+</div>
+
+<!-- 版本信息 -->
+<div class="page" id="versionPage">
+  <div class="page-title">版本信息</div>
+  <div class="list">
+    <div class="item" id="versionFurdroid">
+      <div class="item-title">Furdroid版本</div>
+      <div class="item-sub">beta</div>
+    </div>
+    <div class="item" id="devInfo">
+      <div class="item-title">开发信息</div>
+      <div class="item-sub">作者：Lidocaine<br>日期：2026-03-03</div>
+    </div>
+  </div>
+</div>
+
+<!-- 备份与重置 -->
+<div class="page" id="backupPage">
+  <div class="page-title">备份与重置</div>
+  <div class="list">
+    <div class="item" id="backupBtn">
+      <div class="item-title">备份数据</div>
+    </div>
+    <div class="item" id="restoreBtn">
+      <div class="item-title">恢复备份</div>
+    </div>
+    <div class="item" id="resetSystemBtn">
+      <div class="item-title">重置系统</div>
+    </div>
+  </div>
+</div>
+
+<!-- 开发选项 -->
+<div class="page" id="devOptionsPage">
+  <div class="page-title">开发选项</div>
+  <div class="list">
+    <div class="item">
+      <div class="item-title">开发模式</div>
+      <div class="dev-switch" id="devSwitch"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 网页应用主页面 -->
+<div class="page" id="webMainPage">
+  <div class="page-title">网页应用</div>
+  <div class="web-page-content">
+    <button class="web-btn" id="webJumpBtn">网页跳转</button>
+    <button class="web-btn" id="quickNavBtn">快速导航</button>
+  </div>
+</div>
+
+<!-- 网页跳转页面 -->
+<div class="page" id="webJumpPage">
+  <div class="page-title">网页跳转</div>
+  <div class="web-page-content">
+    <div class="web-input-wrap">
+      <input type="text" id="webUrlInput" placeholder="请输入网址（需包含http/https）">
+    </div>
+    <button class="web-btn" id="confirmJumpBtn">确认跳转</button>
+  </div>
+</div>
+
+<!-- 快速导航页面 -->
+<div class="page" id="quickNavPage">
+  <div class="page-title">快速导航</div>
+  <div class="nav-list">
+    <div class="nav-item" data-url="https://furup.me/">FurUP万事屋</div>
+    <div class="nav-item" data-url="http://60.205.94.101:8080/app/">旧聊Web</div>
+    <div class="nav-item" data-url="https://github.com/">Github</div>
+    <div class="nav-item" data-url="https://gitee.com/">Gitee</div>
+    <div class="nav-item" data-url="https://sourceforge.net/">SourceForge</div>
+    <div class="nav-item" data-url="https://zh.minecraft.wiki/">Minecraft Wiki</div>
+    <div class="nav-item" data-url="http://baidu.com/">百度</div>
+    <div class="nav-item" data-url="https://cn.bing.com/">必应</div>
+    <div class="nav-item" data-url="https://developer.android.google.cn/get-started?hl=zh-cn">Android</div>
+    <div class="nav-item" data-url="https://m.bilibili.com/">Bilibili</div>
+    <div class="nav-item" data-url="https://www.douyin.com/home">抖音</div>
+    <div class="nav-item" data-url="http://tt.sjmyzq.cn/">番茄小说API</div>
+    <div class="nav-item" data-url="http://forum.xda-developers.com/">XDA</div>
+  </div>
+</div>
+
+<!-- 通用确认弹窗 -->
+<div class="modal" id="confirmModal">
+  <div class="modal-box">
+    <div class="modal-title" id="modalTitle">提示</div>
+    <div class="modal-desc" id="modalDesc">描述内容</div>
+    <div class="modal-btns">
+      <button class="modal-btn btn-cancel" id="modalCancel">取消</button>
+      <button class="modal-btn btn-ok" id="modalOk">确认</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="imgPicker" accept="image/jpeg,image/png">
+<input type="file" id="zipPicker" accept=".zip">
+
+<!-- 导航 -->
+<div class="nav-bar">
+  <button class="nav-btn">
+    <div class="menu-btn"></div>
+  </button>
+  <button class="nav-btn">
+    <div class="home-btn"></div>
+  </button>
+  <button class="nav-btn">
+    <div class="back-btn"></div>
+  </button>
+</div>
+
+<script>
+  const DEFAULT_SETTINGS = {
+    darkMode: false,
+    brightness: 100,
+    devMode: false
+  };
+
+  let settings = {...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem('app_settings') || '{}')};
+  let currentWallpaperTarget = null;
+  let clickCount = 0;
+  let clickTimer = null;
+  let modalAction = null;
+  const toast = document.getElementById('toast');
+  const confirmModal = document.getElementById('confirmModal');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalDesc = document.getElementById('modalDesc');
+  const brightMin = document.getElementById('brightMin');
+
+  const webMainPage = document.getElementById('webMainPage');
+  const webJumpPage = document.getElementById('webJumpPage');
+  const quickNavPage = document.getElementById('quickNavPage');
+  const webJumpBtn = document.getElementById('webJumpBtn');
+  const quickNavBtn = document.getElementById('quickNavBtn');
+  const webUrlInput = document.getElementById('webUrlInput');
+  const confirmJumpBtn = document.getElementById('confirmJumpBtn');
+  const navItems = document.querySelectorAll('.nav-item');
+
+  const pages = [settingsPage,displayPage,brightnessPage,wallpaperPage,customPage,aboutPage,versionPage,backupPage,devOptionsPage,webMainPage,webJumpPage,quickNavPage];
+  
+  function saveSettings() {
+    localStorage.setItem('app_settings', JSON.stringify(settings));
+  }
+
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+  
+  function showModal(title, desc, okAction) {
+    modalTitle.textContent = title;
+    modalDesc.textContent = desc;
+    modalAction = okAction;
+    confirmModal.classList.add('show');
+  }
+
+  function createRipple(e) {
+    const el = e.currentTarget;
+    if (!el) return;
+    
+    const ripple = document.createElement('span');
+    ripple.classList.add('ripple');
+
+    ripple.style.background = settings.darkMode 
+      ? 'rgba(255,255,255,0.5)' 
+      : 'rgba(0,0,0,0.3)';
+
+    const rect = el.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height) * 1.5;
+    const x = e.clientX - rect.left - size / 2;
+    const y = e.clientY - rect.top - size / 2;
+
+    ripple.style.width = size + 'px';
+    ripple.style.height = size + 'px';
+    ripple.style.left = x + 'px';
+    ripple.style.top = y + 'px';
+
+    el.appendChild(ripple);
+
+    setTimeout(() => {
+      ripple.style.transform = 'scale(1)';
+      ripple.style.opacity = '0';
+    }, 10);
+    
+    setTimeout(() => {
+      if (ripple.parentNode) ripple.remove();
+    }, 550);
+  }
+
+  const lock = document.getElementById('lock');
+  const desktop = document.getElementById('desktop');
+  const appDrawer = document.getElementById('appDrawer');
+  const lockBtn = document.getElementById('lockBtn');
+  const imgPicker = document.getElementById('imgPicker');
+  const zipPicker = document.getElementById('zipPicker');
+  const darkSwitch = document.getElementById('darkSwitch');
+  const devSwitch = document.getElementById('devSwitch');
+  const brightnessSlider = document.getElementById('brightnessSlider');
+  const brightnessNum = document.querySelector('.brightness-num');
+
+  const defaultBg = 'linear-gradient(135deg, #fca6e8 0%, #e0a8f7 50%, #b379f5 100%)';
+
+  function saveWallpaper(type, base64) {
+    localStorage.setItem('wp_' + type, base64);
+  }
+
+  function loadWallpapers() {
+    const lockWp = localStorage.getItem('wp_lock');
+    const deskWp = localStorage.getItem('wp_desktop');
+    const drawWp = localStorage.getItem('wp_drawer');
+    
+    if (lockWp) lock.style.background = `url(${lockWp}) center/cover`;
+    if (deskWp) desktop.style.background = `url(${deskWp}) center/cover`;
+    if (drawWp) {
+      appDrawer.style.background = `url(${drawWp}) center/cover`;
+    }
+    applyDarkMode();
+  }
+  
+  function clearWallpapers() {
+    localStorage.removeItem('wp_lock');
+    localStorage.removeItem('wp_desktop');
+    localStorage.removeItem('wp_drawer');
+    lock.style.background = desktop.style.background = defaultBg;
+    appDrawer.style.background = '';
+    applyDarkMode();
+    showToast("壁纸已重置为默认");
+  }
+
+  function applyDarkMode() {
+    document.body.classList.toggle('dark-mode', settings.darkMode);
+    darkSwitch.classList.toggle('on', settings.darkMode);
+    const hasDrawer = localStorage.getItem('wp_drawer');
+    
+    if (!hasDrawer) {
+      appDrawer.style.background = settings.darkMode ? '#1c1c1e' : '#fff';
+    }
+  }
+
+  function updateDevUI() {
+    gotoDevOptions.style.display = settings.devMode ? 'block' : 'none';
+    devSwitch.classList.toggle('on', settings.devMode);
+  }
+
+  function updateTime() {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2,0);
+    const m = String(now.getMinutes()).padStart(2,0);
+    const w = '日一二三四五六'[now.getDay()];
+    const t = `${h}:${m}`;
+    document.getElementById('time').innerText = t;
+    document.getElementById('date').innerText = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 星期${w}`;
+    document.getElementById('status-left').innerText = t;
+    document.getElementById('desktop-time').innerText = t;
+  }
+
+  async function exportBackup() {
+    try {
+      const zip = new JSZip();
+      const data = {
+        settings: settings,
+        wp_lock: localStorage.getItem('wp_lock'),
+        wp_desktop: localStorage.getItem('wp_desktop'),
+        wp_drawer: localStorage.getItem('wp_drawer')
+      };
+      zip.file("config.json", JSON.stringify(data, null, 2));
+      const content = await zip.generateAsync({ type: "blob" });
+      saveAs(content, "furdroid_backup.zip");
+      showToast("备份成功！已保存到下载文件夹");
+    } catch (e) {
+      showToast("备份失败：" + e.message);
+    }
+  }
+
+  async function importBackup(file) {
+    try {
+      const zip = new JSZip();
+      const contents = await zip.loadAsync(file);
+      const configFile = contents.file("config.json");
+      if (!configFile) throw new Error("无效的备份文件");
+      
+      const config = JSON.parse(await configFile.async("string"));
+      
+      if (config.settings) localStorage.setItem('app_settings', JSON.stringify(config.settings));
+      if (config.wp_lock) localStorage.setItem('wp_lock', config.wp_lock);
+      if (config.wp_desktop) localStorage.setItem('wp_desktop', config.wp_desktop);
+      if (config.wp_drawer) localStorage.setItem('wp_drawer', config.wp_drawer);
+      
+      showToast("恢复成功，页面即将刷新");
+      setTimeout(() => location.reload(), 1500);
+    } catch (e) {
+      showToast("恢复失败：" + e.message);
+    }
+  }
+
+  function fullSystemReset() {
+    localStorage.clear();
+    location.reload();
+  }
+
+  document.getElementById('backupBtn').onclick = (e) => {
+    createRipple(e);
+    showModal("确认备份", "将所有设置与壁纸打包为ZIP备份", exportBackup);
+  };
+
+  document.getElementById('restoreBtn').onclick = (e) => {
+    createRipple(e);
+    zipPicker.click();
+  };
+
+  document.getElementById('resetSystemBtn').onclick = (e) => {
+    createRipple(e);
+    showModal("重置系统", "将清除所有数据，恢复出厂设置", fullSystemReset);
+  };
+
+  zipPicker.onchange = () => {
+    const file = zipPicker.files[0];
+    if (!file) return;
+    showModal("确认恢复", "将覆盖当前所有设置，继续吗？", () => {
+      importBackup(file);
+      zipPicker.value = '';
+    });
+  };
+  
+  function initAllSettings() {
+    brightMin.textContent = brightnessSlider.min;
+    applyDarkMode();
+    updateDevUI();
+    brightnessSlider.value = settings.brightness;
+    brightnessNum.innerText = settings.brightness;
+    document.body.style.filter = `brightness(${settings.brightness}%)`;
+    loadWallpapers();
+    updateTime();
+    setInterval(updateTime, 1000);
+    lock.classList.add('show');
+  }
+
+  function isModal(){return confirmModal.classList.contains('show')}
+
+  function home() {
+    if(isModal()) return;
+    pages.forEach(p => p.classList.remove('show'));
+    appDrawer.classList.remove('show');
+  }
+
+  document.getElementById('unlock').onclick = function(e) {
+    createRipple(e);
+    lock.classList.remove('show');
+  };
+
+  lockBtn.onclick = function(e) {
+    createRipple(e);
+    home();
+    lock.classList.add('show');
+  };
+
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.onclick = function(e) {
+      createRipple(e);
+      const cls = this.children[0].classList[0];
+      if(cls === 'menu-btn') {
+        if(isModal()||pages.some(p=>p.classList.contains('show')))return;
+        appDrawer.classList.toggle('show');
+      }
+      if(cls === 'home-btn') home();
+      if(cls === 'back-btn') {
+        if(isModal())return;
+        const order=[devOptionsPage,backupPage,versionPage,aboutPage,customPage,wallpaperPage,brightnessPage,displayPage,settingsPage,quickNavPage,webJumpPage,webMainPage];
+        const f=order.find(p=>p.classList.contains('show'));
+        f?f.classList.remove('show'):appDrawer.classList.remove('show');
+      }
+    }
+  });
+
+  document.getElementById('openSettings').onclick = function(e) {
+    createRipple(e);
+    appDrawer.classList.remove('show');
+    pages.forEach(p=>p.classList.remove('show'));
+    settingsPage.className='page from-bottom';
+    setTimeout(()=>settingsPage.classList.add('show'),0);
+  };
+
+  // 打开网页应用
+  document.getElementById('openWeb').onclick = function(e) {
+    createRipple(e);
+    pages.forEach(p => p.classList.remove('show'));
+    appDrawer.classList.remove('show');
+    webMainPage.className = 'page from-bottom';
+    webMainPage.offsetHeight;
+    webMainPage.classList.add('show');
+    showToast("网页应用已启动");
+  };
+
+  webJumpBtn.onclick = function(e) {
+    createRipple(e);
+    webMainPage.classList.remove('show');
+    webJumpPage.className='page from-right';
+    webJumpPage.offsetHeight;
+    webJumpPage.classList.add('show');
+  };
+
+  quickNavBtn.onclick = function(e) {
+    createRipple(e);
+    webMainPage.classList.remove('show');
+    quickNavPage.className='page from-right';
+    quickNavPage.offsetHeight;
+    quickNavPage.classList.add('show');
+  };
+
+  confirmJumpBtn.onclick = function(e) {
+    createRipple(e);
+    const url = webUrlInput.value.trim();
+    if (!url) {
+      showToast("请输入网址");
+      return;
+    }
+    if (!/^https?:\/\//.test(url)) {
+      showToast("请输入完整网址（包含http/https）");
+      return;
+    }
+    window.open(url, '_blank');
+    webUrlInput.value = '';
+    showToast("正在跳转至：" + url);
+  };
+
+  navItems.forEach(item => {
+    item.onclick = function(e) {
+      createRipple(e);
+      const url = this.dataset.url;
+      window.open(url, '_blank');
+      showToast("正在跳转至：" + this.textContent);
+    };
+  });
+
+  document.getElementById('gotoDisplay').onclick = function(e){createRipple(e);displayPage.className='page from-right';displayPage.offsetHeight;displayPage.classList.add('show');};
+  document.getElementById('gotoCustom').onclick = function(e){createRipple(e);customPage.className='page from-right';customPage.offsetHeight;customPage.classList.add('show');};
+  document.getElementById('gotoAbout').onclick = function(e){createRipple(e);aboutPage.className='page from-right';aboutPage.offsetHeight;aboutPage.classList.add('show');};
+  document.getElementById('gotoVersion').onclick = function(e){createRipple(e);versionPage.className='page from-right';versionPage.offsetHeight;versionPage.classList.add('show');};
+  document.getElementById('gotoBackup').onclick = function(e){createRipple(e);backupPage.className='page from-right';backupPage.offsetHeight;backupPage.classList.add('show');};
+  document.getElementById('gotoDevOptions').onclick = function(e){createRipple(e);devOptionsPage.className='page from-right';devOptionsPage.offsetHeight;devOptionsPage.classList.add('show');};
+  document.getElementById('gotoBrightness').onclick = function(e){createRipple(e);brightnessPage.className='page from-right';brightnessPage.offsetHeight;brightnessPage.classList.add('show');};
+  document.getElementById('gotoWallpaper').onclick = function(e){createRipple(e);wallpaperPage.className='page from-right';wallpaperPage.offsetHeight;wallpaperPage.classList.add('show');};
+
+  darkSwitch.onclick = function(e){
+    createRipple(e);
+    settings.darkMode=!settings.darkMode;
+    applyDarkMode();
+    saveSettings();
+  };
+
+  brightnessSlider.oninput=function(){
+    settings.brightness=brightnessSlider.value;
+    brightnessNum.innerText=settings.brightness;
+    document.body.style.filter = `brightness(${settings.brightness}%)`;
+    saveSettings();
+  };
+
+  document.getElementById('versionFurdroid').onclick = function(e){
+    createRipple(e);
+    clickCount++;
+    if(clickTimer) clearTimeout(clickTimer);
+    clickTimer = setTimeout(()=>clickCount=0,1000);
+    if(clickCount>=3){
+      clickCount=0;
+      showToast("彩蛋触发：伪系统Beta版");
+    }
+  };
+
+  const devInfo = document.getElementById('devInfo');
+  let devClickCount = 0;
+  let devClickTimer = null;
+
+  devInfo.onclick = function(e) {
+    createRipple(e);
+    devClickCount++;
+    if (devClickTimer) clearTimeout(devClickTimer);
+    devClickTimer = setTimeout(() => devClickCount = 0, 2000);
+
+    if (devClickCount >= 7) {
+      devClickCount = 0;
+      clearTimeout(devClickTimer);
+      if (settings.devMode) {
+        showToast("您已处在开发模式！");
+      } else {
+        settings.devMode = true;
+        saveSettings();
+        updateDevUI();
+        showToast("已进入开发模式！");
+      }
+    }
+  };
+
+  devSwitch.onclick = function(e){
+    createRipple(e);
+    settings.devMode = !settings.devMode;
+    saveSettings();
+    updateDevUI();
+    if(!settings.devMode) showToast("已退出开发模式");
+  };
+
+  document.querySelectorAll('#wallpaperPage .item[data-target]').forEach(i=>{
+    i.onclick = function(e){
+      createRipple(e);
+      currentWallpaperTarget=i.dataset.target;
+      imgPicker.click();
+    };
+  });
+
+  imgPicker.onchange=function(){
+    const f=imgPicker.files[0];
+    if(!f)return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const base64 = e.target.result;
+      if(currentWallpaperTarget==='lock'){
+        lock.style.background=`url(${base64}) center/cover`;
+        saveWallpaper('lock',base64);
+      }
+      if(currentWallpaperTarget==='desktop'){
+        desktop.style.background=`url(${base64}) center/cover`;
+        saveWallpaper('desktop',base64);
+      }
+      if(currentWallpaperTarget==='drawer'){
+        appDrawer.style.background=`url(${base64}) center/cover`;
+        saveWallpaper('drawer',base64);
+        applyDarkMode();
+      }
+      showToast("壁纸设置成功");
+    }
+    reader.readAsDataURL(f);
+    imgPicker.value = '';
+  };
+
+  document.getElementById('resetWallpaper').onclick = function(e){
+    createRipple(e);
+    showModal("重置壁纸", "您的所有壁纸将被重置为默认", clearWallpapers);
+  };
+  
+  document.getElementById('modalCancel').onclick = (e) => {
+    createRipple(e);
+    confirmModal.classList.remove('show');
+    modalAction = null;
+  };
+  
+  document.getElementById('modalOk').onclick = (e) => {
+    createRipple(e);
+    if (typeof modalAction === 'function') modalAction();
+    confirmModal.classList.remove('show');
+    modalAction = null;
+  };
+
+  window.onload = initAllSettings;
+</script>
+</body>
+</html>
