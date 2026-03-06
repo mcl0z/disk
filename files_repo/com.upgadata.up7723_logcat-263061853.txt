@@ -1,0 +1,37 @@
+--------- beginning of main
+04-19 16:52:42.399 14458 14458 E libc    : Access denied finding property "ro.serialno"
+04-19 16:52:42.837 14245 14245 E ReflectUtils: No field HW_EXTFLAG_XLAYOUT_ENABLED in class Ljava/lang/Object; (declaration of 'java.lang.Object' appears in /apex/com.android.runtime/javalib/core-oj.jar)
+04-19 16:52:42.839 14245 14512 E HwApkAssets: Unable to read assetfile[easygo.json]
+04-19 16:52:43.138 14245 14498 E TBSBugly: init #00
+04-19 16:52:43.138 14245 14498 E TBSBugly: init return can not use
+04-19 16:52:43.210 14245 14582 E libc    : Access denied finding property "vendor.oem.device.imeicache1"
+04-19 16:52:43.211 14245 14582 E libc    : Access denied finding property "vendor.oem.device.imeicache2"
+04-19 16:52:43.213 14245 14585 E TbsPbProxy: TbsPbBridge Class.forName exception
+04-19 16:52:43.303 14245 14582 E HwAttestationManager: Get public key error: 0
+04-19 16:52:43.373 14245 14498 E TbsUgEngine: invokeMiscMethod tbsUg: com.tencent.tbs.ug.core.TbsUg@c8cc80d
+04-19 16:52:44.076 14245 14684 E ignored : java.lang.NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.content.Context.getSystemService(java.lang.String)' on a null object reference
+04-19 16:52:44.302 14245 14649 E ignored : java.lang.NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.content.Context.getSystemService(java.lang.String)' on a null object reference
+04-19 16:52:44.325 14245 14757 E exception_handler: exception_handler ANR_Native succ registerNatives
+04-19 16:52:44.383 14245 14245 E KING_CARD: WebSettingsExtension getQProxyEnabled false
+04-19 16:52:44.445 14245 14684 E ignored : java.lang.NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.content.Context.getSystemService(java.lang.String)' on a null object reference
+04-19 16:52:44.477 14245 14713 E ignored : java.lang.NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.content.Context.getSystemService(java.lang.String)' on a null object reference
+04-19 16:52:44.597 14245 14684 E ignored : java.lang.NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.content.Context.getSystemService(java.lang.String)' on a null object reference
+04-19 16:52:44.717 14245 14684 E ignored : java.lang.NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.content.Context.getSystemService(java.lang.String)' on a null object reference
+04-19 16:52:45.049 14245 14684 E ignored : java.lang.NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.content.Context.getSystemService(java.lang.String)' on a null object reference
+04-19 16:52:45.064 14245 14834 E D105498 : s:57,v:27
+04-19 16:52:45.159 14245 14834 E SoterUtil: no key name
+04-19 16:52:45.184 14245 14834 E HwUniversalKeyStore: invoke get failed!
+04-19 16:52:45.375 14245 14628 E v8      : Devices's manufacturer: huawei
+04-19 16:52:45.408 14245 14684 E ignored : java.lang.NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.content.Context.getSystemService(java.lang.String)' on a null object reference
+04-19 16:52:45.433 14245 14746 E libc    : Access denied finding property "persist.service.bdroid.bdaddr"
+04-19 16:52:45.438 14245 14746 E libc    : Access denied finding property "persist.service.bdroid.bdaddr"
+04-19 16:52:45.445 14245 14746 E libc    : Access denied finding property "ro.boot.bootreason"
+04-19 16:52:45.445 14245 14746 E libc    : Access denied finding property "ro.runtime.firstboot"
+04-19 16:52:45.446 14245 14746 E libc    : Access denied finding property "net.dns1"
+04-19 16:52:45.446 14245 14746 E libc    : Access denied finding property "net.dns2"
+04-19 16:52:45.474 14245 14684 E ignored : java.lang.NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.content.Context.getSystemService(java.lang.String)' on a null object reference
+04-19 16:52:45.595 14245 14667 E ignored : java.lang.NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.content.Context.getSystemService(java.lang.String)' on a null object reference
+04-19 16:52:45.598 14952 14952 E         : open file error
+04-19 16:52:45.946 14245 14649 E ignored : java.lang.NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.content.Context.getSystemService(java.lang.String)' on a null object reference
+04-19 16:52:46.009 14245 14667 E ignored : java.lang.NullPointerException: Attempt to invoke virtual method 'java.lang.Object android.content.Context.getSystemService(java.lang.String)' on a null object reference
+04-19 16:52:46.080 14245 14706 E memtrack: Couldn't load memtrack module
