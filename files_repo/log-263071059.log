@@ -1,0 +1,138 @@
+oc.cpp:29:19: warning: 'EC_KEY_new_by_curve_name' is
+      deprecated [-Wdeprecated-declarations]
+   29 |     EC_KEY *key = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1); // secp256r1
+      |                   ^
+/data/data/com.termux/files/usr/bin/../../usr/include/openssl/ec.h:1009:1: note:
+      'EC_KEY_new_by_curve_name' has been explicitly marked deprecated here
+ 1009 | OSSL_DEPRECATEDIN_3_0 EC_KEY *EC_KEY_new_by_curve_name(int nid);
+      | ^
+/data/data/com.termux/files/usr/bin/../../usr/include/openssl/macros.h:228:31: note:
+      expanded from macro 'OSSL_DEPRECATEDIN_3_0'
+  228 | #define OSSL_DEPRECATEDIN_3_0 OSSL_DEPRECATED(3.0)
+      |                               ^
+/data/data/com.termux/files/usr/bin/../../usr/include/openssl/macros.h:61:47: note:
+      expanded from macro 'OSSL_DEPRECATED'
+   61 | #define OSSL_DEPRECATED(since) __attribute__((deprecated))
+      |                                               ^
+oc.cpp:31:10: warning: 'EC_KEY_generate_key' is
+      deprecated [-Wdeprecated-declarations]
+   31 |     if (!EC_KEY_generate_key(key)) return -1;
+      |          ^
+/data/data/com.termux/files/usr/bin/../../usr/include/openssl/ec.h:1112:1: note:
+      'EC_KEY_generate_key' has been explicitly marked deprecated here
+ 1112 | OSSL_DEPRECATEDIN_3_0 int EC_KEY_generate_key(EC_KEY *key);
+      | ^
+/data/data/com.termux/files/usr/bin/../../usr/include/openssl/macros.h:228:31: note:
+      expanded from macro 'OSSL_DEPRECATEDIN_3_0'
+  228 | #define OSSL_DEPRECATEDIN_3_0 OSSL_DEPRECATED(3.0)
+      |                               ^
+/data/data/com.termux/files/usr/bin/../../usr/include/openssl/macros.h:61:47: note:
+      expanded from macro 'OSSL_DEPRECATED'
+   61 | #define OSSL_DEPRECATED(since) __attribute__((deprecated))
+      |                                               ^
+oc.cpp:35:19: warning: 'i2d_EC_PUBKEY' is deprecated
+      [-Wdeprecated-declarations]
+   35 |     int der_len = i2d_EC_PUBKEY(key, &der); // 自动分配内存
+      |                   ^
+/data/data/com.termux/files/usr/bin/../../usr/include/openssl/x509.h:736:41: note:
+      'i2d_EC_PUBKEY' has been explicitly marked deprecated here
+  736 | DECLARE_ASN1_ENCODE_FUNCTIONS_only_attr(OSSL_DEPRECATEDIN_3_0, EC_KEY...
+      |                                         ^
+/data/data/com.termux/files/usr/bin/../../usr/include/openssl/macros.h:228:31: note:
+      expanded from macro 'OSSL_DEPRECATEDIN_3_0'
+  228 | #define OSSL_DEPRECATEDIN_3_0 OSSL_DEPRECATED(3.0)
+      |                               ^
+/data/data/com.termux/files/usr/bin/../../usr/include/openssl/macros.h:61:47: note:
+      expanded from macro 'OSSL_DEPRECATED'
+   61 | #define OSSL_DEPRECATED(since) __attribute__((deprecated))
+      |                                               ^
+oc.cpp:41:5: warning: 'EC_KEY_free' is deprecated
+      [-Wdeprecated-declarations]
+   41 |     EC_KEY_free(key);
+      |     ^
+/data/data/com.termux/files/usr/bin/../../usr/include/openssl/ec.h:1014:1: note:
+      'EC_KEY_free' has been explicitly marked deprecated here
+ 1014 | OSSL_DEPRECATEDIN_3_0 void EC_KEY_free(EC_KEY *key);
+      | ^
+/data/data/com.termux/files/usr/bin/../../usr/include/openssl/macros.h:228:31: note:
+      expanded from macro 'OSSL_DEPRECATEDIN_3_0'
+  228 | #define OSSL_DEPRECATEDIN_3_0 OSSL_DEPRECATED(3.0)
+      |                               ^
+/data/data/com.termux/files/usr/bin/../../usr/include/openssl/macros.h:61:47: note:
+      expanded from macro 'OSSL_DEPRECATED'
+   61 | #define OSSL_DEPRECATED(since) __attribute__((deprecated))
+      |                                               ^
+4 warnings generated.
+ld.lld: error: undefined symbol: BIO_f_base64
+>>> referenced by oc.cpp
+>>>               /data/data/com.termux/files/usr/tmp/oc-12d516.o:(base64_encode(unsigned char const*, unsigned long))
+
+ld.lld: error: undefined symbol: BIO_new
+>>> referenced by oc.cpp
+>>>               /data/data/com.termux/files/usr/tmp/oc-12d516.o:(base64_encode(unsigned char const*, unsigned long))
+>>> referenced by oc.cpp
+>>>               /data/data/com.termux/files/usr/tmp/oc-12d516.o:(base64_encode(unsigned char const*, unsigned long))
+
+ld.lld: error: undefined symbol: BIO_s_mem
+>>> referenced by oc.cpp
+>>>               /data/data/com.termux/files/usr/tmp/oc-12d516.o:(base64_encode(unsigned char const*, unsigned long))
+
+ld.lld: error: undefined symbol: BIO_push
+>>> referenced by oc.cpp
+>>>               /data/data/com.termux/files/usr/tmp/oc-12d516.o:(base64_encode(unsigned char const*, unsigned long))
+
+ld.lld: error: undefined symbol: BIO_set_flags
+>>> referenced by oc.cpp
+>>>               /data/data/com.termux/files/usr/tmp/oc-12d516.o:(base64_encode(unsigned char const*, unsigned long))
+
+ld.lld: error: undefined symbol: BIO_write
+>>> referenced by oc.cpp
+>>>               /data/data/com.termux/files/usr/tmp/oc-12d516.o:(base64_encode(unsigned char const*, unsigned long))
+
+ld.lld: error: undefined symbol: BIO_ctrl
+>>> referenced by oc.cpp
+>>>               /data/data/com.termux/files/usr/tmp/oc-12d516.o:(base64_encode(unsigned char const*, unsigned long))
+>>> referenced by oc.cpp
+>>>               /data/data/com.termux/files/usr/tmp/oc-12d516.o:(base64_encode(unsigned char const*, unsigned long))
+
+ld.lld: error: undefined symbol: BIO_free_all
+>>> referenced by oc.cpp
+>>>               /data/data/com.termux/files/usr/tmp/oc-12d516.o:(base64_encode(unsigned char const*, unsigned long))
+
+ld.lld: error: undefined symbol: std::__ndk1::basic_string<char, std::__ndk1::char_traits<char>, std::__ndk1::allocator<char>>::~basic_string()
+>>> referenced by oc.cpp
+>>>               /data/data/com.termux/files/usr/tmp/oc-12d516.o:(base64_encode(unsigned char const*, unsigned long))
+>>> referenced by oc.cpp
+>>>               /data/data/com.termux/files/usr/tmp/oc-12d516.o:(base64_encode(unsigned char const*, unsigned long))
+>>> referenced by oc.cpp
+>>>               /data/data/com.termux/files/usr/tmp/oc-12d516.o:(main)
+>>> referenced 1 more times
+
+ld.lld: error: undefined symbol: EC_KEY_new_by_curve_name
+>>> referenced by oc.cpp
+>>>               /data/data/com.termux/files/usr/tmp/oc-12d516.o:(main)
+
+ld.lld: error: undefined symbol: EC_KEY_generate_key
+>>> referenced by oc.cpp
+>>>               /data/data/com.termux/files/usr/tmp/oc-12d516.o:(main)
+
+ld.lld: error: undefined symbol: i2d_EC_PUBKEY
+>>> referenced by oc.cpp
+>>>               /data/data/com.termux/files/usr/tmp/oc-12d516.o:(main)
+
+ld.lld: error: undefined symbol: CRYPTO_free
+>>> referenced by oc.cpp
+>>>               /data/data/com.termux/files/usr/tmp/oc-12d516.o:(main)
+
+ld.lld: error: undefined symbol: EC_KEY_free
+>>> referenced by oc.cpp
+>>>               /data/data/com.termux/files/usr/tmp/oc-12d516.o:(main)
+
+ld.lld: error: undefined symbol: std::__ndk1::basic_string<char, std::__ndk1::char_traits<char>, std::__ndk1::allocator<char>>::__init(char const*, unsigned long)
+>>> referenced by oc.cpp
+>>>               /data/data/com.termux/files/usr/tmp/oc-12d516.o:(std::__ndk1::basic_string<char, std::__ndk1::char_traits<char>, std::__ndk1::allocator<char>>::basic_string[abi:ne210000](char const*, unsigned long))
+
+ld.lld: error: undefined symbol: __gxx_personality_v0
+>>> referenced by oc.cpp
+>>>               /data/data/com.termux/files/usr/tmp/oc-12d516.o:(DW.ref.__gxx_personality_v0)
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
