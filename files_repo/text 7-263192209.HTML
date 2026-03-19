@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>移动端文件加密器 · XOR 16位密码</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: #f2f5f9;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+        .card {
+            background: #ffffff;
+            width: 100%;
+            max-width: 480px;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0, 20, 50, 0.15);
+            padding: 24px 20px;
+            border: 1px solid rgba(0, 60, 130, 0.1);
+        }
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #0a2a44;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        h1 span {
+            font-size: 1rem;
+            background: #eef3fa;
+            color: #1e4a7a;
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-weight: 400;
+        }
+        .sub {
+            color: #4a5f7a;
+            font-size: 0.95rem;
+            margin-bottom: 24px;
+            border-left: 4px solid #3b82f6;
+            padding-left: 14px;
+            background: #f0f7ff;
+            border-radius: 0 12px 12px 0;
+            line-height: 1.4;
+        }
+        .file-area {
+            margin-bottom: 24px;
+        }
+        .file-label {
+            display: block;
+            background: #f0f4fe;
+            border: 2px dashed #3b82f6;
+            border-radius: 18px;
+            padding: 22px 12px;
+            text-align: center;
+            color: #1e4a7a;
+            font-weight: 500;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+            word-break: break-word;
+        }
+        .file-label span {
+            display: block;
+            font-size: 0.9rem;
+            color: #4b6584;
+            margin-top: 8px;
+        }
+        .file-label:hover {
+            background: #e5edfd;
+            border-color: #2563eb;
+        }
+        #fileInput {
+            display: none;
+        }
+        .selected-file {
+            background: #e8f0fe;
+            border-radius: 14px;
+            padding: 12px 16px;
+            margin-top: 12px;
+            font-size: 0.9rem;
+            color: #102a4c;
+            border: 1px solid #bacde0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            word-break: break-all;
+        }
+        .selected-file .icon {
+            font-size: 1.2rem;
+        }
+        .field {
+            margin-bottom: 20px;
+        }
+        .field label {
+            display: block;
+            font-weight: 600;
+            color: #0a2a44;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+        .password-input {
+            width: 100%;
+            padding: 16px 18px;
+            font-size: 1.1rem;
+            border: 1.5px solid #bdd3e8;
+            border-radius: 40px;
+            outline: none;
+            background: #ffffff;
+            letter-spacing: 2px;
+            font-family: 'Courier New', monospace;
+            transition: border 0.2s, box-shadow 0.2s;
+        }
+        .password-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+        }
+        .pwd-hint {
+            font-size: 0.8rem;
+            margin-top: 6px;
+            padding-left: 12px;
+            color: #b91c1c;
+            min-height: 20px;
+        }
+        .pwd-hint.valid {
+            color: #0f7b0f;
+        }
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 28px 0 20px;
+        }
+        .btn {
+            flex: 1 1 140px;
+            background: #ffffff;
+            border: 1.5px solid #2c5282;
+            color: #2c5282;
+            font-weight: 600;
+            font-size: 1.2rem;
+            padding: 16px 8px;
+            border-radius: 50px;
+            transition: all 0.2s;
+            cursor: pointer;
+            background: #f7fafd;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .btn-primary {
+            background: #1e4a7a;
+            border: 1.5px solid #1e4a7a;
+            color: white;
+            box-shadow: 0 6px 12px rgba(30,74,122,0.25);
+        }
+        .btn-primary:active {
+            background: #0f3a5e;
+            transform: scale(0.98);
+        }
+        .btn-secondary:active {
+            background: #d4e2f0;
+            transform: scale(0.98);
+        }
+        .download-area {
+            background: #eef5f9;
+            border-radius: 20px;
+            padding: 16px;
+            margin-top: 18px;
+            display: none;
+            border: 1px solid #aac3d9;
+            text-align: center;
+        }
+        .download-area.show {
+            display: block;
+        }
+        .download-link {
+            display: inline-block;
+            background: #1f6e43;
+            color: white;
+            font-weight: 600;
+            padding: 14px 26px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-size: 1.2rem;
+            margin: 8px 0 4px;
+            box-shadow: 0 4px 10px rgba(31,110,67,0.3);
+        }
+        .download-info {
+            font-size: 0.85rem;
+            color: #1d3b5c;
+            background: #dae6f2;
+            padding: 8px 12px;
+            border-radius: 28px;
+            margin-top: 12px;
+            word-break: break-all;
+        }
+        .footer-note {
+            margin-top: 18px;
+            color: #5f7d9c;
+            font-size: 0.75rem;
+            text-align: center;
+            border-top: 1px solid #d6e2ee;
+            padding-top: 16px;
+        }
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,0,0,0.1);
+            border-radius: 50%;
+            border-top-color: #1e4a7a;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .status-text {
+            font-size: 0.9rem;
+            color: #2563eb;
+            padding: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>
+            📱 文件加密器
+            <span>XOR</span>
+        </h1>
+        <div class="sub">
+            16位密码 · 仅限字母数字 · 加解密算法相同
+        </div>
+
+        <!-- 隐藏的文件输入 -->
+        <input type="file" id="fileInput">
+
+        <div class="file-area">
+            <div class="file-label" id="customFileButton">
+                📂 点击选择文件
+                <span>支持任意格式 (移动端)</span>
+            </div>
+            <div class="selected-file" id="selectedFileInfo" style="display: none;">
+                <span class="icon">📄</span>
+                <span id="fileNameDisplay"></span>
+            </div>
+        </div>
+
+        <div class="field">
+            <label>🔑 16位密码 (a～z A～Z 0～9)</label>
+            <input type="password" id="password" class="password-input" maxlength="16" placeholder="例如: Xy8k9mQ2rT5wPz1A">
+            <div class="pwd-hint" id="pwdHint"></div>
+        </div>
+
+        <div class="button-group">
+            <button class="btn btn-primary" id="encryptBtn">🔒 加密</button>
+            <button class="btn btn-primary" id="decryptBtn">🔓 解密</button>
+        </div>
+
+        <!-- 下载区域 (动态显示) -->
+        <div class="download-area" id="downloadArea">
+            <a href="#" id="downloadLink" class="download-link" download>⬇ 下载文件</a>
+            <div class="download-info" id="downloadFilename"></div>
+            <div class="status-text" id="processingStatus"></div>
+        </div>
+
+        <div class="footer-note">
+            * 加密后文件名添加 .enc ，解密尝试移除 .enc 或添加 .dec<br>
+            * 处理在本地进行，文件不会上传
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // DOM 元素
+            const fileInput = document.getElementById('fileInput');
+            const customFileBtn = document.getElementById('customFileButton');
+            const selectedFileDiv = document.getElementById('selectedFileInfo');
+            const fileNameSpan = document.getElementById('fileNameDisplay');
+            const passwordInput = document.getElementById('password');
+            const pwdHint = document.getElementById('pwdHint');
+            const encryptBtn = document.getElementById('encryptBtn');
+            const decryptBtn = document.getElementById('decryptBtn');
+            const downloadArea = document.getElementById('downloadArea');
+            const downloadLink = document.getElementById('downloadLink');
+            const downloadFilename = document.getElementById('downloadFilename');
+            const processingStatus = document.getElementById('processingStatus');
+
+            let currentFile = null;           // 用户选择的 File 对象
+            let resultBlob = null;             // 加密/解密后生成的Blob
+            let resultFileName = '';            // 推荐的文件名
+
+            // === 密码验证 ===
+            function validatePassword(pwd) {
+                if (!pwd || pwd.length !== 16) return false;
+                return /^[a-zA-Z0-9]{16}$/.test(pwd);
+            }
+
+            function updatePwdHint() {
+                const pwd = passwordInput.value;
+                if (!pwd) {
+                    pwdHint.textContent = '请输入16位密码 (字母和数字)';
+                    pwdHint.className = 'pwd-hint';
+                } else if (pwd.length !== 16) {
+                    pwdHint.textContent = `长度必须为16位，当前为 ${pwd.length} 位`;
+                    pwdHint.className = 'pwd-hint';
+                } else if (!/^[a-zA-Z0-9]{16}$/.test(pwd)) {
+                    pwdHint.textContent = '只能包含大小写字母和数字 (a-z, A-Z, 0-9)';
+                    pwdHint.className = 'pwd-hint';
+                } else {
+                    pwdHint.textContent = '✓ 密码有效';
+                    pwdHint.className = 'pwd-hint valid';
+                }
+            }
+            passwordInput.addEventListener('input', updatePwdHint);
+            passwordInput.addEventListener('blur', updatePwdHint);
+
+            // === 触发文件选择 ===
+            customFileBtn.addEventListener('click', function(e) {
+                fileInput.click();
+            });
+
+            // === 监听文件选择 ===
+            fileInput.addEventListener('change', function(e) {
+                const files = e.target.files;
+                if (files.length > 0) {
+                    currentFile = files[0];
+                    fileNameSpan.textContent = currentFile.name + '  (' + (currentFile.size / 1024).toFixed(1) + ' KB)';
+                    selectedFileDiv.style.display = 'flex';
+                    // 隐藏之前的下载区域 (新文件选择后之前的下载结果无效)
+                    downloadArea.classList.remove('show');
+                    resultBlob = null;
+                } else {
+                    currentFile = null;
+                    selectedFileDiv.style.display = 'none';
+                }
+            });
+
+            // === 核心 XOR 处理 (ArrayBuffer) ===
+            function xorProcess(arrayBuffer, password) {
+                const keyBytes = [];
+                for (let i = 0; i < 16; i++) {
+                    keyBytes.push(password.charCodeAt(i) & 0xFF);
+                }
+                const data = new Uint8Array(arrayBuffer);
+                const len = data.length;
+                for (let i = 0; i < len; i++) {
+                    data[i] ^= keyBytes[i % 16];
+                }
+                return data.buffer;  // 返回修改后的 ArrayBuffer (注意: 原buffer被修改, 但此处data和原buffer共享)
+            }
+
+            // === 生成推荐文件名 (加密/解密模式) ===
+            function generateOutputFileName(originalName, mode) {
+                // mode: 'encrypt' 或 'decrypt'
+                if (!originalName) return 'output.bin';
+
+                if (mode === 'encrypt') {
+                    // 加密：追加 .enc
+                    return originalName + '.enc';
+                } else {
+                    // 解密：如果以 .enc 结尾，则去除；否则追加 .dec
+                    const lowerName = originalName.toLowerCase();
+                    if (lowerName.endsWith('.enc')) {
+                        return originalName.slice(0, -4); // 移除 .enc
+                    } else {
+                        return originalName + '.dec';
+                    }
+                }
+            }
+
+            // === 执行加密/解密操作 ===
+            function process(mode) {
+                // 清空之前的状态
+                downloadArea.classList.remove('show');
+                resultBlob = null;
+
+                // 1. 检查文件
+                if (!currentFile) {
+                    alert('请先选择一个文件');
+                    return;
+                }
+
+                // 2. 验证密码
+                const pwd = passwordInput.value;
+                if (!validatePassword(pwd)) {
+                    alert('密码必须是16位字母和数字组合 (a-z A-Z 0-9)');
+                    return;
+                }
+
+                processingStatus.innerHTML = '⏳ 正在处理文件... <span class="spinner"></span>';
+                downloadArea.classList.add('show');  // 显示区域以便看到状态
+
+                // 3. 读取文件为 ArrayBuffer
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    try {
+                        const arrayBuffer = ev.target.result;
+                        // 进行XOR (直接修改buffer内容)
+                        xorProcess(arrayBuffer, pwd);   // 原地修改
+
+                        // 生成输出文件名
+                        const outFileName = generateOutputFileName(currentFile.name, mode);
+                        resultFileName = outFileName;
+
+                        // 创建Blob
+                        resultBlob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
+
+                        // 生成下载链接
+                        const url = URL.createObjectURL(resultBlob);
+                        downloadLink.href = url;
+                        downloadLink.download = outFileName;
+                        downloadFilename.textContent = '📁 ' + outFileName;
+
+                        processingStatus.innerHTML = '✅ 处理完成！点击下方按钮下载。';
+                        downloadArea.classList.add('show');
+
+                        // 清理旧的ObjectURL？但保留供下载，在下载后或下次生成前可以revoke。但为了简单，我们在下次生成新blob前清理。
+                        // 这里暂存url以便后续撤销。
+                        // 设置一个一次性revoke：下载一次后撤销？不太好，但用户可能多次下载。所以保持链接，直到新操作。
+                        // 我们可以在下次process开始时撤销之前的url。
+                        if (window._currentObjectURL) {
+                            URL.revokeObjectURL(window._currentObjectURL);
+                        }
+                        window._currentObjectURL = url;
+
+                    } catch (err) {
+                        processingStatus.innerHTML = '❌ 处理失败: ' + err.message;
+                        console.error(err);
+                    }
+                };
+                reader.onerror = function() {
+                    processingStatus.innerHTML = '❌ 读取文件失败';
+                };
+                reader.readAsArrayBuffer(currentFile);
+            }
+
+            // 绑定加密/解密按钮
+            encryptBtn.addEventListener('click', function() {
+                process('encrypt');
+            });
+
+            decryptBtn.addEventListener('click', function() {
+                process('decrypt');
+            });
+
+            // 可选：在下载链接点击后不撤销，直到下次生成新文件时撤销旧链接 (已在process中实现)
+            // 额外清理：当用户重新选择文件时，撤销之前的URL
+            fileInput.addEventListener('change', function() {
+                if (window._currentObjectURL) {
+                    URL.revokeObjectURL(window._currentObjectURL);
+                    window._currentObjectURL = null;
+                }
+                downloadArea.classList.remove('show');
+            });
+
+            // 初始化密码提示
+            updatePwdHint();
+
+            // 防止点击下载链接后仍保留高亮
+            downloadLink.addEventListener('click', function() {
+                // 可以加一点短暂提示，但不影响功能
+            });
+        })();
+    </script>
+</body>
+</html>
