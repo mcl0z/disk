@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>云墨商店</title>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+<style>
+/* 全局基础样式：精简重置，兼容低版本 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif; /* 替换system-ui，兼容安卓4.4原生字体 */
+  -webkit-tap-highlight-color: transparent;
+  transition: color .3s ease, background .3s ease, opacity .3s ease;
+  outline: none;
+  user-select: none;
+  line-height: 1.4;
+}
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+body {
+  background: #222;
+  color: #fff;
+  display: -webkit-box; /* 兼容旧版flex */
+  display: flex;
+  -webkit-box-orient: vertical;
+  flex-direction: column;
+}
+body.light {
+  background: #f9f9f9;
+  color: #222;
+}
+/* 顶部栏 */
+header {
+  background: #d47a8f;
+  padding: 14px 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  font-size: 18px;
+  font-weight: 500;
+  position: relative;
+  z-index: 10;
+}
+#themeToggle {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  -webkit-transform: translateY(-50%);
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: #fff;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: -webkit-box;
+  display: flex;
+  -webkit-box-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 24px;
+  overflow: hidden;
+}
+#themeToggle .icon {
+  position: absolute;
+  transition: opacity .3s ease;
+}
+#themeToggle .light-icon { opacity: 0; }
+body.light #themeToggle .dark-icon { opacity: 0; }
+body.light #themeToggle .light-icon { opacity: 1; }
+/* 涟漪样式：精简核心动画 */
+.btn-ripple, .ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  -webkit-transform: scale(0);
+  transform: scale(0);
+  animation: ripple-anim .3s linear;
+  pointer-events: none;
+  z-index: 0;
+}
+body.light .btn-ripple { background: rgba(0,0,0,0.1); }
+body.light .ripple { background: rgba(0,0,0,0.15); }
+@keyframes ripple-anim {
+  to { -webkit-transform: scale(2.5); transform: scale(2.5); opacity: 0; }
+}
+/* 页面容器与页面：精简定位逻辑 */
+.pages-container {
+  -webkit-box-flex: 1;
+  flex: 1;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+.page {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 15px 20px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .3s ease-in-out, visibility .3s ease-in-out;
+  z-index: 2;
+  background: inherit;
+  overflow-y: auto;
+}
+.page.active {
+  opacity: 1;
+  visibility: visible;
+  z-index: 3;
+}
+/* 首页样式：精简冗余margin/padding */
+#home {
+  text-align: center;
+}
+.logo-space {
+  width: 120px;
+  height: 120px;
+  margin: 15px auto;
+  border-radius: 20px;
+  display: -webkit-box;
+  display: flex;
+  -webkit-box-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  justify-content: center;
+  color: #fff;
+  overflow: hidden;
+  background: #888;
+}
+.logo-space img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+body.light .logo-space { background: #888; color: #222; }
+.about-header .logo-space {
+  width: 90px;
+  height: 90px;
+  margin: 0;
+}
+.app-name {
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+.desc {
+  font-size: 15px;
+  margin-bottom: 15px;
+  opacity: 0.85;
+}
+/* 下载卡片：精简样式重复 */
+.download-card {
+  text-align: left;
+  background: #333;
+  padding: 15px;
+  border-radius: 12px;
+  margin: 0 auto 15px;
+  max-width: 500px;
+  position: relative;
+}
+body.light .download-card { background: #fff; }
+.download-card h3 {
+  margin-bottom: 6px;
+  color: #d47a8f;
+}
+.wear-tip {
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 8px;
+}
+body.light .wear-tip { color: #666; }
+.download-card p {
+  margin: 4px 0;
+  font-size: 14px;
+}
+/* 按钮样式：统一精简，减少重复 */
+.card-download, .dev-goto {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  background: transparent;
+  color: #d47a8f;
+  position: relative;
+  overflow: hidden;
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  z-index: 1;
+  white-space: nowrap;
+}
+.card-download {
+  display: block;
+  margin-left: auto;
+  margin-top: 10px;
+}
+/* 通用标题 */
+.page-title {
+  margin-bottom: 15px;
+  color: #d47a8f;
+  font-size: 22px;
+  font-weight: 600;
+}
+/* 更新日志 */
+.log-item {
+  background: #333;
+  padding: 12px 15px;
+  border-radius: 12px;
+  margin-bottom: 10px;
+}
+body.light .log-item { background: #fff; }
+.log-item .version {
+  font-size: 16px;
+  font-weight: bold;
+  color: #d47a8f;
+  margin-bottom: 4px;
+}
+.log-item .date {
+  font-size: 12px;
+  opacity: 0.8;
+  margin-bottom: 6px;
+}
+.log-item .content {
+  font-size: 14px;
+}
+/* 关于页：精简过渡延迟逻辑，保留顺序 */
+.about-header {
+  display: -webkit-box;
+  display: flex;
+  -webkit-box-align: center;
+  align-items: center;
+  gap: 25px;
+  background: #333;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+  max-width: 600px;
+  transition: background .3s ease 0s, color .3s ease 0s;
+}
+body.light .about-header { background: #fff; }
+.about-intro {
+  display: -webkit-box;
+  display: flex;
+  -webkit-box-orient: vertical;
+  flex-direction: column;
+  gap: 4px;
+  -webkit-box-flex: 1;
+  flex: 1;
+}
+.about-intro h4 {
+  font-size: 16px;
+  color: #d47a8f;
+  margin-bottom: 2px;
+}
+.about-intro p {
+  font-size: 14px;
+}
+.about-info-card {
+  background: #333;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+  max-width: 600px;
+  transition: background .3s ease .05s, color .3s ease .05s;
+}
+body.light .about-info-card { background: #fff; }
+.about-info-card h4 {
+  font-size: 16px;
+  color: #d47a8f;
+  margin-bottom: 6px;
+}
+.about-info-card p {
+  font-size: 14px;
+  margin: 4px 0;
+}
+/* 开发人员卡片 */
+.dev-list {
+  max-width: 600px;
+  margin-bottom: 15px;
+}
+.dev-card {
+  display: -webkit-box;
+  display: flex;
+  -webkit-box-align: center;
+  align-items: center;
+  gap: 15px;
+  background: #333;
+  padding: 12px 15px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  position: relative;
+  transition: background .3s ease .1s, color .3s ease .1s;
+}
+body.light .dev-card { background: #fff; }
+.dev-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #777;
+  -webkit-box-flex: 0;
+  flex-shrink: 0;
+  display: -webkit-box;
+  display: flex;
+  -webkit-box-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 16px;
+  transition: background .3s ease .1s, color .3s ease .1s;
+}
+body.light .dev-avatar { color: #f9f9f9; }
+.dev-info {
+  -webkit-box-flex: 1;
+  flex: 1;
+  text-align: left;
+  display: -webkit-box;
+  display: flex;
+  -webkit-box-orient: vertical;
+  flex-direction: column;
+  gap: 2px;
+}
+.dev-name {
+  font-size: 16px;
+  font-weight: 500;
+}
+.dev-sign {
+  font-size: 12px;
+  opacity: 0.8;
+}
+/* 免责声明 */
+.about-footer {
+  background: #333;
+  padding: 15px;
+  border-radius: 12px;
+  max-width: 600px;
+  font-size: 14px;
+  transition: background .3s ease .15s, color .3s ease .15s;
+}
+body.light .about-footer { background: #fff; }
+.about-footer p {
+  margin: 4px 0;
+}
+.about-footer strong {
+  color: #d47a8f;
+}
+/* 底部导航：精简样式 */
+footer {
+  background: #333;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.3);
+  padding: 6px 0;
+  z-index: 10;
+  position: relative;
+  transition: background .3s ease, color .3s ease;
+}
+body.light footer { background: #fff; }
+.nav {
+  display: -webkit-box;
+  display: flex;
+  -webkit-box-pack: distribute;
+  justify-content: space-around;
+  max-width: 500px;
+  margin: 0 auto;
+}
+.nav-item {
+  display: -webkit-box;
+  display: flex;
+  -webkit-box-orient: vertical;
+  flex-direction: column;
+  -webkit-box-align: center;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 8px;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  position: relative;
+  min-width: 60px;
+  border-radius: 20px;
+  overflow: hidden;
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+}
+body.light .nav-item { color: #222; }
+.nav-item.active { color: #d47a8f !important; }
+.material-icons-outlined { font-size: 24px; }
+</style>
+</head>
+<body>
+<!-- 顶部 -->
+<header>
+  云墨商店
+  <button id="themeToggle">
+    <span class="icon dark-icon material-icons-outlined">dark_mode</span>
+    <span class="icon light-icon material-icons-outlined">light_mode</span>
+  </button>
+</header>
+<!-- 页面容器 -->
+<div class="pages-container">
+  <!-- 首页 -->
+  <div class="page active" id="home">
+    <div class="logo-space">
+      <img src="你的图片链接放在这里" alt="云墨商店图标">
+    </div>
+    <div class="app-name">云墨商店</div>
+    <div class="desc">
+      这是一款简洁流畅的应用商店，适配各种机型与系统。<br>
+      支持多版本下载，低配置设备也能流畅使用，用户可上传评论交流。
+    </div>
+    <div class="download-card">
+      <h3>下载</h3>
+      <div class="wear-tip">wear os 用户以及原屏用户，请到应用内下载专用版</div>
+      <p>• 版本名称：NaN</p>
+      <p>• 适配系统：Android 4.4 及以上，方圆屏通用</p>
+      <p>• 版本特性：NaN</p>
+      <button class="card-download" id="versionDownload">下载</button>
+    </div>
+  </div>
+  <!-- 公告页 -->
+  <div class="page" id="notice">
+    <h2 class="page-title">公告</h2>
+  </div>
+  <!-- 更新日志页 -->
+  <div class="page" id="log">
+    <h2 class="page-title">更新日志</h2>
+    <div class="log-item">
+      <div class="version">VNaN</div>
+      <div class="date">2026年 NaN 月 NaN 日</div>
+      <div class="content">- NaN</div>
+    </div>
+  </div>
+  <!-- 关于页 -->
+  <div class="page" id="about">
+    <h2 class="page-title">关于</h2>
+    <div class="about-header">
+      <div class="logo-space">
+        <img src="你的图片链接放在这里" alt="云墨商店图标">
+      </div>
+      <div class="about-intro">
+        <h4>介绍</h4>
+        <p>云墨商店是一款主打简洁流畅的轻量应用商店，适配低版本系统运行，为用户提供便捷的应用下载服务，支持用户上传评论、交流使用体验。</p>
+      </div>
+    </div>
+    <div class="about-info-card">
+      <h4>信息</h4>
+      <p>应用版本：VNaN</p>
+      <p>适配平台：Android 4.4+ / Wear OS</p>
+      <p>开发状态：NaN</p>
+      <p>最新更新时间：2026年 NaN 月 NaN 日</p>
+    </div>
+    <div class="dev-list">
+      <div class="dev-card">
+        <div class="dev-avatar">测1</div>
+        <div class="dev-info">
+          <div class="dev-name">测试开发1</div>
+          <div class="dev-sign">测试个性签名1</div>
+        </div>
+        <button class="dev-goto" id="goto1">前往主页</button>
+      </div>
+      <div class="dev-card">
+        <div class="dev-avatar">测2</div>
+        <div class="dev-info">
+          <div class="dev-name">测试开发2</div>
+          <div class="dev-sign">测试个性签名2</div>
+        </div>
+        <button class="dev-goto" id="goto2">前往主页</button>
+      </div>
+      <div class="dev-card">
+        <div class="dev-avatar">测3</div>
+        <div class="dev-info">
+          <div class="dev-name">测试开发3</div>
+          <div class="dev-sign">测试个性签名3</div>
+        </div>
+        <button class="dev-goto" id="goto3">前往主页</button>
+      </div>
+    </div>
+    <div class="about-footer">
+      <p><strong>免责声明</strong>：本应用为手表应用商店专用工具，所有资源均来自公开网络，仅用于个人学习交流，请勿用于商业用途，如有侵权请联系开发者删除。</p>
+      <p><strong>官方交流</strong>：QQ群 未创建 马上就创建</p>
+      <p><strong>版权信息</strong>：NaN</p>
+      <p><strong>开源信息</strong>：本应用核心代码基于开源协议开发，开源地址：NaN，欢迎开发者交流与贡献。</p>
+    </div>
+  </div>
+</div>
+<!-- 底部导航 -->
+<footer>
+  <div class="nav">
+    <button class="nav-item active" data-page="home">
+      <span class="material-icons-outlined">home</span>
+      <span>首页</span>
+    </button>
+    <button class="nav-item" data-page="notice">
+      <span class="material-icons-outlined">outbox</span>
+      <span>公告</span>
+    </button>
+    <button class="nav-item" data-page="log">
+      <span class="material-icons-outlined">history</span>
+      <span>更新日志</span>
+    </button>
+    <button class="nav-item" data-page="about">
+      <span class="material-icons-outlined">info</span>
+      <span>关于</span>
+    </button>
+  </div>
+</footer>
+
+<script>
+// 兼容低版本：使用var声明，移除箭头函数
+var $body = document.body;
+var $themeToggle = document.getElementById('themeToggle');
+var $navItems = document.querySelectorAll('.nav-item');
+var $pages = document.querySelectorAll('.page');
+var $rippleBtns = document.querySelectorAll('.card-download, .dev-goto, #themeToggle, .nav-item');
+var activeNav = $navItems[0];
+var activePage = $pages[0];
+
+// 禁止右键
+document.addEventListener('contextmenu', function(e) {
+  e.preventDefault();
+});
+
+// 通用涟漪函数：精简逻辑
+function createRipple(el, e) {
+  e.stopPropagation();
+  var rect = el.getBoundingClientRect();
+  var size = Math.max(rect.width, rect.height);
+  var x = e.clientX - rect.left - size / 2;
+  var y = e.clientY - rect.top - size / 2;
+  var ripple = document.createElement('span');
+  ripple.className = el.id === 'themeToggle' ? 'btn-ripple' : 'ripple';
+  ripple.style.width = ripple.style.height = size + 'px';
+  ripple.style.left = x + 'px';
+  ripple.style.top = y + 'px';
+  el.appendChild(ripple);
+  setTimeout(function() {
+    if (ripple.parentNode === el) ripple.remove();
+  }, 300);
+}
+
+// 主题切换
+$themeToggle.addEventListener('click', function(e) {
+  createRipple($themeToggle, e);
+  $body.classList.toggle('light');
+});
+
+// 页面切换
+for (var i = 0; i < $navItems.length; i++) {
+  $navItems[i].addEventListener('click', function(e) {
+    if (this === activeNav) return;
+    activePage.classList.remove('active');
+    activeNav.classList.remove('active');
+    activeNav = this;
+    activePage = document.getElementById(this.dataset.page);
+    activePage.classList.add('active');
+    activeNav.classList.add('active');
+    createRipple(this, e);
+  });
+}
+
+// 按钮涟漪绑定
+for (var j = 0; j < $rippleBtns.length; j++) {
+  $rippleBtns[j].addEventListener('click', function(e) {
+    createRipple(this, e);
+  });
+}
+</script>
+</body>
+</html>
